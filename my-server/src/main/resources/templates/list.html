@@ -16,15 +16,14 @@
         <div class="app-topbar">
             <h1>대시보드</h1>
             <div sec:authorize="isAnonymous()">
-                <a href="/user/login" class="btn btn-outline-light btn-sm me-2">로그인</a>
-                <a href="/user/join" class="btn btn-accent btn-sm">회원가입</a>
+                <a href="#" onclick="openSettings(); return false;" class="btn btn-accent btn-sm">관리자 모드</a>
             </div>
             <div sec:authorize="isAuthenticated()" class="d-flex align-items-center">
                 <span class="me-3" style="font-size:13px; color:var(--text-secondary);">
                     <b sec:authentication="name" style="color:var(--text-primary);"></b>님
                 </span>
                 <form th:action="@{/user/logout}" method="post" style="margin:0;">
-                    <button type="submit" class="btn btn-outline-light btn-sm">로그아웃</button>
+                    <button type="submit" class="btn btn-outline-light btn-sm">사용자 모드로 전환</button>
                 </form>
             </div>
         </div>

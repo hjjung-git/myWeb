@@ -4,8 +4,6 @@ import com.example.my_server.config.SecurityConfig;
 import com.example.my_server.domain.Post;
 import com.example.my_server.exception.UnauthorizedException;
 import com.example.my_server.security.LoginAttemptService;
-import com.example.my_server.security.LoginFailureHandler;
-import com.example.my_server.security.LoginSuccessHandler;
 import com.example.my_server.service.PostService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,12 +34,6 @@ class PostControllerTest
     private PostService postService;
 
     @MockitoBean
-    private LoginFailureHandler loginFailureHandler;
-
-    @MockitoBean
-    private LoginSuccessHandler loginSuccessHandler;
-
-    @MockitoBean
     private LoginAttemptService loginAttemptService;
 
     // ──────────────────────────────────────────────
@@ -49,30 +41,27 @@ class PostControllerTest
     // ──────────────────────────────────────────────
 
     @Test
-    @DisplayName("비로그인 - 수정 폼 접근 시 로그인 페이지로 리다이렉트")
-    void editForm_NotAuthenticated_RedirectToLogin() throws Exception
+    @DisplayName("비로그인 - 수정 폼 접근 시 403")
+    void editForm_NotAuthenticated_Returns403() throws Exception
     {
         mockMvc.perform(get("/post/edit/1"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/user/login"));
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("비로그인 - 삭제 요청 시 로그인 페이지로 리다이렉트")
-    void delete_NotAuthenticated_RedirectToLogin() throws Exception
+    @DisplayName("비로그인 - 삭제 요청 시 403")
+    void delete_NotAuthenticated_Returns403() throws Exception
     {
         mockMvc.perform(get("/post/delete/1"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/user/login"));
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("비로그인 - 글쓰기 폼 접근 시 로그인 페이지로 리다이렉트")
-    void writeForm_NotAuthenticated_RedirectToLogin() throws Exception
+    @DisplayName("비로그인 - 글쓰기 폼 접근 시 403")
+    void writeForm_NotAuthenticated_Returns403() throws Exception
     {
         mockMvc.perform(get("/post/write/form"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/user/login"));
+                .andExpect(status().isForbidden());
     }
 
     // ──────────────────────────────────────────────

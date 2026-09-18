@@ -49,10 +49,16 @@
 - [x] 로컬 개발 DB를 H2 → 자체 구축 MySQL(LTS)로 전환, 전용 DB/계정 구성
 - [x] 로컬 자격 증명 파일 git 추적 제외 (보안)
 - [x] Flyway 도입 — 베이스라인 마이그레이션(`V1__baseline.sql`)으로 로컬 DB 스키마 생성, `ddl-auto=validate`로 전환해 로컬 실행 검증까지 완료
-- [ ] Controller REST API 전환 착수 — 게시글(Post) 도메인부터 시작. 기존 PostController(SSR)는 그대로 두고 `/api/posts` 조회(GET) 엔드포인트를 DTO 기반으로 새로 추가 (Strangler Fig: 신규 API가 기존 SSR 라우트를 대체하는 게 아니라 병행). 로컬 실행 + JSON 응답 확인까지 완료. 작성/수정/삭제 API는 세션 인증을 JSON API에서 어떻게 다룰지(CSRF 등) 정한 뒤 추가 예정
+- [ ] Controller REST API 전환 착수 — 게시글(Post) 도메인부터 시작. 기존 PostController(SSR)는 그대로 두고 `/api/posts` 조회(GET) 엔드포인트를 DTO 기반으로 새로 추가 (Strangler Fig: 신규 API가 기존 SSR 라우트를 대체하는 게 아니라 병행). 로컬 실행 + JSON 응답 확인까지 완료
+- [ ] 관리자 모드 전환 API(`/api/auth/admin`) 추가 — 접근 모델을 "누구나 조회 가능 / admin만 로그인 후 수정 가능"으로 정하고, 별도 회원 로그인 화면 대신 코드 하나만 입력하면 관리자 모드로 전환되는 방식을 택함. 내부적으로는 기존 Spring Security 로그인 체계(고정 admin 계정)를 그대로 재사용해 새 인증 로직을 만들지 않음. CSRF는 그대로 켜둔 채 토큰 조회용 엔드포인트(`/api/auth/csrf`)를 추가해 대응. 기존 사이드바의 "설정" 오버레이에 코드 입력 UI도 같이 추가 (React 완성 전이라도 지금 화면에서 바로 쓸 수 있도록). 로컬 빌드 확인, 실제 코드 입력 동작은 검증 전
+- [ ] 게시글 쓰기 API(작성/수정/삭제)는 위 관리자 모드 전환 확인 후 추가 예정
+- [x] 기존 회원가입/폼 로그인 전면 제거 — 접근 모델이 "관리자 1명 + 조회는 누구나"로 확정되면서 일반 회원가입 기능 자체가 불필요해짐. UserController, 회원가입/로그인 화면, 폼 로그인 전용 성공·실패 핸들러를 모두 삭제하고, 기존에 그 핸들러들이 하던 로그인 시도 횟수 제한(IP당 5회/15분)은 관리자 코드 API 쪽으로 옮겨 재사용
+
+- [x] 게시글 쓰기 API(작성/수정/삭제) 추가 — `/api/posts` POST/PUT/DELETE에 hasRole("ADMIN") 적용, 매매일지 필수값 검증은 기존 SSR 쪽 규칙과 동일하게 맞춤. 로컬 빌드 검증 완료
+- [ ] 경력/프로젝트 소개용 포트폴리오 도메인 신설 — 매매일지(TRADE_LOG)는 제외 예정 도메인이라 REST 전환 우선순위에서 뺐고, 대신 실제 포트폴리오 사이트에 쓰일 새 도메인(`PortfolioItem`)을 추가함. 메인 목록은 요약만, 상세가 필요한 항목만 상세 API로 연결하는 구조(이전에 정했던 "요약 + 상세 페이지" 원칙 반영). 기존 암호화폐 보유현황 기능(Holding/PortfolioController)과 이름이 겹치지 않도록 `/api/portfolio-items`로 분리. CRUD 전체를 한 번에 만들었고, Flyway 마이그레이션(`V2__add_portfolio_item.sql`)도 같이 추가. 로컬 빌드에서 Flyway가 V2를 실제로 적용하는 것까지 확인 완료
 
 ## 다음 단계
 
-- [ ] Controller REST API 전환 계속 — 나머지 도메인(User/Article/Portfolio) 조회 API 추가, 이후 쓰기 API용 인증 방식 결정 및 적용
+- [ ] Controller REST API 전환 계속 — 나머지 도메인(User/Article/Portfolio) 조회·쓰기 API 추가
 - [ ] React 프론트엔드 구축, 포트폴리오 콘텐츠 통합
 - [ ] (개발 완료 후) 자체 하드웨어 상시 구동 + Cloudflare Tunnel 배포
