@@ -49,9 +49,10 @@
 - [x] 로컬 개발 DB를 H2 → 자체 구축 MySQL(LTS)로 전환, 전용 DB/계정 구성
 - [x] 로컬 자격 증명 파일 git 추적 제외 (보안)
 - [x] Flyway 도입 — 베이스라인 마이그레이션(`V1__baseline.sql`)으로 로컬 DB 스키마 생성, `ddl-auto=validate`로 전환해 로컬 실행 검증까지 완료
+- [ ] Controller REST API 전환 착수 — 게시글(Post) 도메인부터 시작. 기존 PostController(SSR)는 그대로 두고 `/api/posts` 조회(GET) 엔드포인트를 DTO 기반으로 새로 추가 (Strangler Fig: 신규 API가 기존 SSR 라우트를 대체하는 게 아니라 병행). 로컬 실행 + JSON 응답 확인까지 완료. 작성/수정/삭제 API는 세션 인증을 JSON API에서 어떻게 다룰지(CSRF 등) 정한 뒤 추가 예정
 
 ## 다음 단계
 
-- [ ] 기존 Controller를 REST API(`@RestController` + DTO)로 전환
+- [ ] Controller REST API 전환 계속 — 나머지 도메인(User/Article/Portfolio) 조회 API 추가, 이후 쓰기 API용 인증 방식 결정 및 적용
 - [ ] React 프론트엔드 구축, 포트폴리오 콘텐츠 통합
 - [ ] (개발 완료 후) 자체 하드웨어 상시 구동 + Cloudflare Tunnel 배포
