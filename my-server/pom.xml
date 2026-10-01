@@ -41,6 +41,15 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- DevTools: 로컬 개발 중 클래스/리소스(application-local.properties, logback-spring.xml 등) 파일이
+		     바뀌면 서버를 자동으로 재시작해준다. optional=true는 Spring Boot 관례 — 이 모듈을 의존하는
+		     다른 모듈에 전이되지 않게 함. 운영 배포용 jar(mvn clean package)에는 자동으로 빠진다 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional>
+		</dependency>
+
         <!-- JPA : Java 객체와 DB 테이블을 자동으로 매핑해주는 도구 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -19,6 +19,6 @@ spring.flyway.baseline-version=1
 # Flyway가 스키마를 관리하므로 Hibernate는 엔티티-스키마 일치 여부만 검증한다.
 spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
-
-spring.jpa.show-sql=true
+# SQL 로그는 logback-spring.xml의 org.hibernate.SQL DEBUG 로거 하나로만 찍는다
+# (spring.jpa.show-sql은 끔 — 같이 켜두면 Hibernate가 콘솔에 중복으로 또 찍어서 로그가 두 번씩 나왔음)
 spring.jpa.properties.hibernate.format_sql=true

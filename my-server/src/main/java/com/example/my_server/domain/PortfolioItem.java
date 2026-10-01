@@ -3,7 +3,7 @@ package com.example.my_server.domain;
 import jakarta.persistence.*;
 
 /**
- * 경력/프로젝트 소개용 포트폴리오 항목.
+ * 경력/프로젝트 소개용 포트폴리오 항목
  * 메인 페이지에는 요약(summary)만 보여주고, 필요한 항목만 상세(detailContent)로 연결하는
  * 구조를 위해 두 필드를 분리해뒀다. type으로 "프로젝트"와 "경력"을 함께 표현한다.
  */

@@ -31,6 +31,19 @@ Sources:
 
 ---
 
+## 프론트/백엔드 분리 배포 대비 — Cross-Origin 설정 (2026-10-01)
+
+기기 구매 전이지만 코드 레벨에서 미리 끝내둘 수 있는 부분이라 반영함. Cloudflare Pages(프론트)와 Cloudflare Tunnel(백엔드)로 배포가 분리되면, 지금까지와 달리 둘이 서로 다른 origin이 되어 브라우저가 기본적으로 요청을 막는다(CORS) — 이걸 그냥 두면 로그인 세션 쿠키도 전달되지 않는다. 기기가 아직 없어도 코드 자체는 지금 끝내둘 수 있어서 미리 반영했다.
+
+- **프론트엔드**: `frontend/src/lib/api.js`가 `VITE_API_BASE_URL` 환경변수로 백엔드 전체 URL을 받도록 수정(비어 있으면 기존처럼 상대 경로, 즉 로컬 개발에는 영향 없음). `fetch`의 `credentials`도 `'same-origin'` → `'include'`로 변경 — cross-origin 요청에도 쿠키를 실어 보내기 위함(로컬 개발에서는 same-origin이라 동작 차이 없음).
+- **백엔드**: `SecurityConfig`에 CORS 설정 추가 — 허용 origin은 `app.cors.allowed-origin` 프로퍼티(prod는 `FRONTEND_ORIGIN` 환경변수)로 지정하고, `allowCredentials=true`로 쿠키 전달을 허용. 로컬 개발은 Vite 프록시로 인해 애초에 same-origin이라 CORS 필터 자체가 안 타므로 영향 없음.
+- **세션 쿠키**: prod 프로파일에만 `SameSite=None; Secure`로 설정(cross-site 쿠키는 이 조합이 아니면 브라우저가 거부함) + `server.forward-headers-strategy=framework` 추가(Cloudflare Tunnel이 HTTPS를 처리하고 내부적으로는 HTTP로 넘어오므로, Tunnel이 보내는 X-Forwarded-* 헤더를 신뢰하도록 설정하지 않으면 Spring이 요청을 HTTP로 오인해 Secure 쿠키를 내려주지 않는다).
+- **기기 설치 시 추가로 설정해야 할 값**: Cloudflare Pages 프로젝트 환경변수에 `VITE_API_BASE_URL`, 기기 systemd 서비스에 `FRONTEND_ORIGIN` — 둘 다 실제 도메인이 정해진 뒤 채워 넣으면 된다(위 systemd 섹션 예시에 반영해둠).
+
+<br>
+
+---
+
 ## 로컬 실행
 
 ```bash
@@ -45,6 +58,24 @@ npm run dev
 ```
 
 접속 → http://localhost:5173
+
+> 백엔드에 `spring-boot-devtools`를 추가해뒀다(2026-10-01) — 클래스 파일이나
+> `application-local.properties`/`logback-spring.xml` 같은 설정 파일이 바뀌면 서버가 자동으로 재시작된다.
+> 단, devtools는 `target/classes`가 실제로 갱신돼야 감지하므로, 뭔가가 그걸 다시 컴파일해줘야 한다.
+> IntelliJ에서 코드는 편집하되 서버는 IDE 실행이 아니라 별도 터미널(`mvn spring-boot:run`)로 띄우는
+> 방식이면, 아래 두 가지를 모두 설정해야 동작한다(둘 중 하나만 하면 안 됨 — 실제로 이 프로젝트에서
+> 둘째 항목이 기본값으로 안 맞춰져 있어서 처음엔 재시작이 안 됐었다):
+>
+> 1. `Settings > Build, Execution, Deployment > Compiler`에서 **Build project automatically** 켜기
+> 2. `Project Structure(⌘;) > Modules > my-server > Paths` 탭에서 "Use module compile output path"를
+>    선택하고 Output path를 `my-server/target/classes`, Test output path를
+>    `my-server/target/test-classes`로 직접 지정 — 이 프로젝트는 `.idea/misc.xml`의 기본 출력 경로가
+>    `target/classes`가 아니라 `out/`으로 돼 있어서, 1번만 켜면 auto-make가 `out/`에 컴파일하고
+>    devtools가 보는 `target/classes`는 안 바뀌는 상태가 된다
+>
+> 설정 후 `Build > Rebuild Project` 한 번 실행. 그 다음부터는 코드/설정 파일 저장 후 에디터 밖으로
+> 포커스만 옮기면(터미널 클릭 등) 자동 컴파일 → devtools가 감지해 재시작까지 이어지고, 터미널 콘솔에
+> "Restarting due to..." 로그가 뜬다. (2026-10-01 실제로 이 두 단계로 동작 확인 완료)
 
 <br>
 
@@ -122,6 +153,7 @@ WorkingDirectory=/home/<기기 사용자>
 Environment=DATABASE_URL=jdbc:mysql://localhost:3306/<DB_NAME>
 Environment=DATABASE_USERNAME=<DB_USERNAME>
 Environment=DATABASE_PASSWORD=<DB_PASSWORD>
+Environment=FRONTEND_ORIGIN=https://<Cloudflare Pages 도메인>
 ExecStart=/usr/bin/java -jar /home/<기기 사용자>/my-server-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
 Restart=on-failure
 RestartSec=10
@@ -165,7 +197,7 @@ sudo journalctl -u my-server -f
    - Root directory: `frontend`
    - Build command: `npm run build`
    - Build output directory: `dist`
-3. 환경변수로 API 베이스 URL을 `https://api.<내 서브도메인>`으로 지정 (현재 프론트엔드는 상대 경로 `/api/...`로 호출하므로, 배포 시에는 이 베이스 URL을 요청 앞에 붙이도록 `frontend/src/lib/api.js`를 조정해야 한다 — 기기 설치 단계에서 실제로 반영)
+3. 환경변수 `VITE_API_BASE_URL`에 `https://api.<내 서브도메인>` 지정 (프론트엔드 코드는 이미 이 환경변수를 읽도록 준비돼 있음 — `frontend/.env.example` 참고, 빈 값이면 기존처럼 상대 경로로 동작)
 4. main 브랜치에 push하면 Cloudflare가 자동으로 빌드·배포한다 (이 부분만 자동화되어 있고, 백엔드 쪽은 위의 수동 배포 절차를 따른다)
 
 <br>

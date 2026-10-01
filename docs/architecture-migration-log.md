@@ -86,6 +86,11 @@
   - 크로스플랫폼 점검: Maven 래퍼(`mvnw`/`mvnw.cmd`) 둘 다 존재, Java 버전 고정(21)이라 플랫폼 무관, 프론트엔드 npm 스크립트에 유닉스 전용 셸 문법 없음, 레거시 정리로 파일 업로드/경로 처리 코드 자체가 삭제되어 OS별 경로 구분자 문제 여지 없음 — 구조적으로는 이미 문제 없었음. 유일하게 발견된 공백(`.gitattributes` 부재로 인한 줄바꿈 혼용 위험)은 바로 추가해 조치. 상세 내용은 [docs/cross-platform-dev.md](cross-platform-dev.md) 참고
   - 호스팅 사실관계 재검증: Cloudflare 공식 문서 기준으로 Pages/Tunnel 무료 티어의 정확한 한도와 "기간 제한 없는 상시 무료"임을 소스와 함께 재확인 — 상세 내용은 [docs/deploy.md](deploy.md)의 "무료 호스팅 여부 검증" 절 참고
 
+- [x] 프론트/백엔드 분리 배포(Cloudflare Pages + Cloudflare Tunnel)에 대비한 Cross-Origin 코드 선반영 — 기기가 아직 없어도 코드 레벨 작업은 가능해 미리 진행함
+  - 프론트: `frontend/src/lib/api.js`가 `VITE_API_BASE_URL` 환경변수로 백엔드 URL을 받도록 수정(비어 있으면 기존 상대 경로 그대로 — 로컬 개발 영향 없음), `fetch` credentials를 `'same-origin'` → `'include'`로 변경
+  - 백엔드: `SecurityConfig`에 CORS 설정 추가(`app.cors.allowed-origin`/`FRONTEND_ORIGIN`, `allowCredentials=true`), prod 프로파일에 세션 쿠키 `SameSite=None; Secure` + `server.forward-headers-strategy=framework` 추가(Cloudflare Tunnel 뒤에서 Secure 쿠키가 정상 동작하려면 필요)
+  - 로컬 개발은 Vite 프록시로 인해 여전히 same-origin이라 동작 변화 없음 — `mvn spring-boot:run` + `npm run dev`로 평소처럼 검증 가능. 상세: [docs/deploy.md](deploy.md)의 "프론트/백엔드 분리 배포 대비 — Cross-Origin 설정" 절
+
 ## 다음 단계
 
 - [ ] 상시 구동 전용 저전력 기기(라즈베리파이/미니PC 등) 구매 — 2026-10-01 기준 약 3주 뒤 가능할 것으로 예상. 평소 포트폴리오 콘텐츠 편집은 맥북으로 하고, 서류 제출 기간처럼 공개 접근성이 중요한 시기에는 맥북이 아니라 이 기기를 상시 구동 서버로 쓰기로 결정함(개인 노트북을 공개 서버로 쓰면 수면/네트워크 변경/외출 시 사이트가 죽는 리스크가 있고, 하필 가장 민감한 시기에 그 리스크를 감수하게 됨)
