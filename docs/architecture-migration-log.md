@@ -80,8 +80,15 @@
   - 설정: `WebConfig`(파일 업로드 정적 리소스 핸들러), `GlobalExceptionHandler`(Thymeleaf 에러 뷰)와 `@EnableScheduling`(스케줄러 쓰던 곳이 NewsService뿐이었음) 삭제. `SecurityConfig`에서 `/main/list`, `/panel/**`, `/portfolio/**`, `/post/delete/**`, `/uploads/**` 등 레거시 라우트 권한 설정 및 더 이상 쓰이지 않는 formLogin 로그아웃(logoutSuccessUrl) 설정 제거
   - DB: Flyway `V3__remove_trading_and_news_features.sql` 추가 — `article`/`holding` 테이블 삭제, `posts` 테이블에서 매매일지 전용 컬럼 및 `file_path` 삭제(기존에 쌓여있던 데이터도 함께 삭제됨, 사전에 사용자 확인 완료)
   - 프론트엔드: 백엔드에 `type` 필드 자체가 사라졌으므로 `ArchivePreview`/`ArchiveList`/`ArchiveForm`에서 `type=INSIGHT` 쿼리 파라미터와 작성 payload의 `type: 'INSIGHT'`도 함께 제거
-  - 이 세션(샌드박스 VM)에는 Maven이 없어 실제 컴파일은 검증하지 못함 — 사용자 로컬 환경에서 `mvn spring-boot:run`으로 최초 확인 필요
+  - 사용자 로컬 환경에서 `mvn spring-boot:run`으로 최초 검증 완료 — Flyway V3 마이그레이션 정상 적용, 서버 정상 기동 확인. 프론트엔드(`npm run dev`)에서도 포트폴리오·아카이브 조회/작성/수정/삭제 정상 동작 확인. 검증 후 GitHub에 push 완료
+
+- [x] 집 Windows 데스크톱을 공동 개발 기기로 추가하면서 크로스플랫폼(macOS+Windows) 개발 환경 점검, 무료 호스팅 사실관계 재검증 — 상시 구동 전용 기기 구매 계획 자체는 그대로 유지(Windows 데스크톱도 맥북과 마찬가지로 수면/절전 방지 설정이 필요해 상시 구동 서버로는 번거로움이 동일하다고 판단)
+  - 크로스플랫폼 점검: Maven 래퍼(`mvnw`/`mvnw.cmd`) 둘 다 존재, Java 버전 고정(21)이라 플랫폼 무관, 프론트엔드 npm 스크립트에 유닉스 전용 셸 문법 없음, 레거시 정리로 파일 업로드/경로 처리 코드 자체가 삭제되어 OS별 경로 구분자 문제 여지 없음 — 구조적으로는 이미 문제 없었음. 유일하게 발견된 공백(`.gitattributes` 부재로 인한 줄바꿈 혼용 위험)은 바로 추가해 조치. 상세 내용은 [docs/cross-platform-dev.md](cross-platform-dev.md) 참고
+  - 호스팅 사실관계 재검증: Cloudflare 공식 문서 기준으로 Pages/Tunnel 무료 티어의 정확한 한도와 "기간 제한 없는 상시 무료"임을 소스와 함께 재확인 — 상세 내용은 [docs/deploy.md](deploy.md)의 "무료 호스팅 여부 검증" 절 참고
 
 ## 다음 단계
 
-- [ ] (개발 완료 후) 자체 하드웨어 상시 구동 + Cloudflare Tunnel 배포, GitHub Actions 배포 트리거를 수동(workflow_dispatch)에서 다시 push로 복원
+- [ ] 상시 구동 전용 저전력 기기(라즈베리파이/미니PC 등) 구매 — 2026-10-01 기준 약 3주 뒤 가능할 것으로 예상. 평소 포트폴리오 콘텐츠 편집은 맥북으로 하고, 서류 제출 기간처럼 공개 접근성이 중요한 시기에는 맥북이 아니라 이 기기를 상시 구동 서버로 쓰기로 결정함(개인 노트북을 공개 서버로 쓰면 수면/네트워크 변경/외출 시 사이트가 죽는 리스크가 있고, 하필 가장 민감한 시기에 그 리스크를 감수하게 됨)
+- [ ] 기기 구매 후 배포 진행 — 계획은 [docs/deploy.md](deploy.md)에 미리 정리해둠. 핵심 결정 두 가지:
+  - 프론트엔드(React 빌드)는 기기와 분리해 **Cloudflare Pages**에 올린다 — 정적 파일이라 상시 구동 기기에 같이 둘 필요가 없고, 기기가 잠시 꺼져도 사이트 자체는 떠 있고 API 호출만 실패하는 편이 더 안전함
+  - GitHub Actions 자동 배포(push 시 기기까지 자동 반영)는 처음부터 하지 않고 **수동 배포로 시작** — 집 네트워크에 GitHub 빌드 서버가 SSH로 들어올 통로(Cloudflare Tunnel의 TCP 터널 등)를 만드는 초기 설정이 늘어나므로, 수동 배포로 안정화한 뒤 자동화를 다시 검토하기로 함. 그래서 `.github/workflows/deploy.yml`의 `workflow_dispatch`(수동 실행) 설정은 당장은 그대로 둔다
