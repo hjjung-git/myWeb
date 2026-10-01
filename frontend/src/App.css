@@ -587,6 +587,65 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 }
 
 /* 스티키 헤더에 섹션 상단이 가려지지 않도록 앵커 이동 시 여유를 둔다 */
-#about, #skills, #portfolio, #certifications, #contact {
+#about, #skills, #portfolio, #certifications, #archive, #contact {
   scroll-margin-top: 96px;
+}
+
+/* ---- archive ---- */
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+}
+.section-head .section-title {
+  margin-bottom: 0;
+}
+
+.post-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.post-row {
+  border-top: 1px solid var(--border);
+}
+.post-row:last-child {
+  border-bottom: 1px solid var(--border);
+}
+.post-row a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0.1rem;
+  text-decoration: none;
+  color: inherit;
+}
+.post-row:hover a {
+  color: var(--accent-strong);
+}
+.post-title {
+  font-weight: 600;
+}
+.post-meta {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.6rem;
+}
+.page-indicator {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.82rem;
+  color: var(--text-dim);
 }

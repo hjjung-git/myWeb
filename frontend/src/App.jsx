@@ -8,6 +8,9 @@ import TabNav from './components/TabNav.jsx'
 import Home from './pages/Home.jsx'
 import PortfolioDetail from './pages/PortfolioDetail.jsx'
 import PortfolioForm from './pages/PortfolioForm.jsx'
+import ArchiveList from './pages/ArchiveList.jsx'
+import ArchiveDetail from './pages/ArchiveDetail.jsx'
+import ArchiveForm from './pages/ArchiveForm.jsx'
 import './App.css'
 
 function App() {
@@ -32,6 +35,10 @@ function App() {
                 <Route path="/portfolio/new" element={<PortfolioForm />} />
                 <Route path="/portfolio/:id" element={<PortfolioDetail />} />
                 <Route path="/portfolio/:id/edit" element={<PortfolioForm />} />
+                <Route path="/archive" element={<ArchiveList />} />
+                <Route path="/archive/new" element={<ArchiveForm />} />
+                <Route path="/archive/:id" element={<ArchiveDetail />} />
+                <Route path="/archive/:id/edit" element={<ArchiveForm />} />
               </Routes>
             </main>
           </div>

@@ -22,6 +22,3 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
-
-# Groq API (set GROQ_API_KEY env var to enable, free tier)
-groq.api.key=${GROQ_API_KEY:}

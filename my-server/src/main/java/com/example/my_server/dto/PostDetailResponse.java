@@ -1,10 +1,7 @@
 package com.example.my_server.dto;
 
 import com.example.my_server.domain.Post;
-import com.example.my_server.domain.PostType;
-import com.example.my_server.domain.TradePosition;
 
-import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 /**
@@ -15,14 +12,6 @@ public record PostDetailResponse(
         String title,
         String username,
         String content,
-        String filePath,
-        PostType type,
-        String ticker,
-        TradePosition position,
-        BigDecimal entryPrice,
-        BigDecimal exitPrice,
-        BigDecimal profitRate,
-        String exchange,
         ZonedDateTime lastModifiedAt
 ) {
     public static PostDetailResponse from(Post post) {
@@ -31,14 +20,6 @@ public record PostDetailResponse(
                 post.getTitle(),
                 post.getUsername(),
                 post.getContent(),
-                post.getFilePath(),
-                post.getType(),
-                post.getTicker(),
-                post.getPosition(),
-                post.getEntryPrice(),
-                post.getExitPrice(),
-                post.getProfitRate(),
-                post.getExchange(),
                 post.getLastModifiedAt()
         );
     }

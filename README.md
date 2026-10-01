@@ -2,7 +2,7 @@
 
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=flat-square&logo=java&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?style=flat-square&logo=springboot&logoColor=white)
-![Thymeleaf](https://img.shields.io/badge/Thymeleaf-005F0F?style=flat-square&logo=thymeleaf&logoColor=white)
+![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=flat-square&logo=bootstrap&logoColor=white)
 ![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazonaws&logoColor=white)
 ![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white)
@@ -36,9 +36,8 @@
 | 분류 | 기술 | 상태 |
 | :--- | :--- | :---: |
 | Language | Java 21 | 완료 |
-| Framework | Spring Boot 4.0.0 · Spring Data JPA · Spring Security | 완료 |
-| View (레거시) | Thymeleaf · Bootstrap 5 | 완료 → React로 대체 예정 |
-| Frontend (신규) | React _(placeholder)_ | 예정 |
+| Backend | Spring Boot 4.0.0 · Spring Data JPA · Spring Security (REST API 전용, 뷰 템플릿 엔진 없음) | 완료 |
+| Frontend | React (Vite) · React Router | 완료 |
 | Database | H2(로컬, 레거시) · AWS RDS MySQL(운영, 레거시) · 자체 구축 MySQL(로컬 개발) | 진행 중 |
 | Deployment (레거시) | AWS EC2 · Nginx | 완료 → 자체 호스팅으로 전환 예정 |
 | Deployment (신규) | 자체 소유 하드웨어 + Cloudflare Tunnel _(placeholder)_ | 예정 |
@@ -101,8 +100,9 @@
 | Step 1 | 로컬 개발 DB 전환 (H2 → 자체 구축 MySQL) | ✅ |
 | Step 2 | Flyway 도입 (스키마 버전 관리) | ✅ |
 | Step 3 | 기존 Controller REST API 전환 | ✅ |
-| Step 4 | React 프론트엔드 구축 및 포트폴리오 통합 | ⬜ |
-| Step 5 | 자체 호스팅 배포 (Cloudflare Tunnel) | ⬜ |
+| Step 4 | React 프론트엔드 구축 및 포트폴리오 통합 | ✅ |
+| Step 5 | 레거시 SSR 및 제외 도메인(뉴스/보유현황/매매일지) 코드 정리 | ✅ |
+| Step 6 | 자체 호스팅 배포 (Cloudflare Tunnel) | ⬜ |
 
 <br>
 
@@ -111,11 +111,17 @@
 ## Quick Start
 
 ```bash
+# 백엔드 (REST API 서버, 8081)
 cd my-server
 mvn spring-boot:run
+
+# 프론트엔드 (React, 5173 — 개발 중 /api 요청은 8081로 프록시됨)
+cd frontend
+npm install
+npm run dev
 ```
 
-접속 → http://localhost:8081
+접속 → http://localhost:5173
 
 운영 서버 배포 → [docs/deploy.md](docs/deploy.md)
 

@@ -70,8 +70,18 @@
 
 - [x] 홈을 한 페이지 스크롤 구조로 전환 — About/Skills/Experience·Projects/Certifications/Contact를 전부 "/" 하나에 섹션으로 배치. 상단 탭은 라우트 이동이 아니라 해당 섹션으로 부드럽게 스크롤 이동(홈이 아닌 화면에서 탭 클릭 시엔 홈으로 돌아가면서 그 섹션으로 이동). IntersectionObserver로 지금 보고 있는 섹션을 추적해 탭 하이라이트에 반영. 프로젝트 상세·관리자 작성/수정 화면은 기존처럼 별도 라우트로 유지. 로컬 실행 확인 완료
 
+- [x] 일반 글(Post, INSIGHT 타입) 작성/조회 화면을 React로 이전 — 처음에는 "Blog" 탭을 홈 스크롤 밖 `/blog` 전용 라우트로 분리했으나, 탭 클릭 시에만 라우트가 바뀌어 다른 탭들과 동작이 달라 어색하다는 피드백으로 두 차례 조정함. (1) 탭 자체는 다른 탭과 동일하게 홈 안에서 앵커 스크롤만 하도록 통일하고, 최신 글 5개 미리보기 섹션을 홈에 추가 — 전체 목록/페이지네이션은 미리보기의 "더보기" 버튼을 눌렀을 때만 별도 라우트(`/blog`)로 이동. (2) 이름이 "Blog"라는 것과 About~Certifications(이력/커리어 흐름) 사이 위치가 어색하다는 피드백으로, 명칭을 "Archive"(공부 기록까지 포괄하는 느낌)로 바꾸고 위치도 Certifications 뒤·Contact 바로 앞(보조 콘텐츠 자리)으로 재배치. 관련 컴포넌트/라우트도 전부 Blog* → Archive*, `/blog` → `/archive`로 이름 변경(백엔드 Post/INSIGHT 타입명은 내부 구현이라 그대로 유지). 매매일지(TRADE_LOG) 전용 필드는 다루지 않음 — 제외 도메인. 로컬 실행 확인 완료
+
+- [x] 레거시 SSR 컨트롤러/템플릿 및 제외 확정된 Article(뉴스)/Holding(암호화폐 보유현황)/매매일지(TRADE_LOG) 관련 코드 전면 삭제 — React 쪽 기능(포트폴리오, 아카이브)이 레거시 화면을 완전히 대체한 뒤 진행한 Strangler Fig의 마지막 단계. 정리 전 세 기능의 실사용 여부를 사용자에게 직접 확인: 매매일지는 더 이상 쓰지 않음(완전 삭제), 뉴스/시세 조회는 지금도 동작하지만 새 사이트와 무관(삭제), 보유현황은 이전 폼로그인 제거 때 이미 깨진 죽은 코드(삭제)로 셋 다 완전 삭제로 결정됨.
+  - 컨트롤러: `PostController`(SSR), `ArticleController`, `MarketController`, `PortfolioController`(레거시 홀딩) 삭제
+  - 도메인/리포지토리: `Article`, `Holding`, `PostType`, `TradePosition` 및 관련 리포지토리 삭제. `Post` 엔티티에서 매매일지 전용 필드(ticker/position/entryPrice/exitPrice/profitRate/exchange)와 더 이상 쓰이지 않는 파일 첨부(filePath) 제거 — 이제 단일 글 모델(제목/내용/작성자)만 남음
+  - 서비스: `NewsService`(RSS 수집), `UpbitClient`(업비트 시세), `ClaudeClient`(Groq 기반 뉴스 요약) 삭제. `PostService`/`PostServiceImpl`에서 매매일지 수익률 계산, 대시보드 통계, 파일 업로드 로직 제거
+  - 템플릿/정적 리소스: `resources/templates`, `resources/static` 전체 삭제(Thymeleaf 뷰가 더 이상 없음) — `spring-boot-starter-thymeleaf`, `thymeleaf-extras-springsecurity6`, `rome`(RSS 파서) 의존성도 pom.xml에서 제거. 이로써 백엔드는 뷰를 반환하는 컨트롤러 없이 **순수 REST API 서버**로 전환 완료
+  - 설정: `WebConfig`(파일 업로드 정적 리소스 핸들러), `GlobalExceptionHandler`(Thymeleaf 에러 뷰)와 `@EnableScheduling`(스케줄러 쓰던 곳이 NewsService뿐이었음) 삭제. `SecurityConfig`에서 `/main/list`, `/panel/**`, `/portfolio/**`, `/post/delete/**`, `/uploads/**` 등 레거시 라우트 권한 설정 및 더 이상 쓰이지 않는 formLogin 로그아웃(logoutSuccessUrl) 설정 제거
+  - DB: Flyway `V3__remove_trading_and_news_features.sql` 추가 — `article`/`holding` 테이블 삭제, `posts` 테이블에서 매매일지 전용 컬럼 및 `file_path` 삭제(기존에 쌓여있던 데이터도 함께 삭제됨, 사전에 사용자 확인 완료)
+  - 프론트엔드: 백엔드에 `type` 필드 자체가 사라졌으므로 `ArchivePreview`/`ArchiveList`/`ArchiveForm`에서 `type=INSIGHT` 쿼리 파라미터와 작성 payload의 `type: 'INSIGHT'`도 함께 제거
+  - 이 세션(샌드박스 VM)에는 Maven이 없어 실제 컴파일은 검증하지 못함 — 사용자 로컬 환경에서 `mvn spring-boot:run`으로 최초 확인 필요
+
 ## 다음 단계
 
-- [ ] 일반 글(Post, INSIGHT 타입) 작성/조회 화면을 React로 이전 — 현재 글쓰기는 아직 레거시 SSR 화면(`/main/list`, `/post/write` 등)에서만 가능
-- [ ] 위 이전이 끝나면 레거시 SSR 컨트롤러/템플릿 및 제외 확정된 Article/Holding 관련 코드 정리(삭제)
 - [ ] (개발 완료 후) 자체 하드웨어 상시 구동 + Cloudflare Tunnel 배포, GitHub Actions 배포 트리거를 수동(workflow_dispatch)에서 다시 push로 복원

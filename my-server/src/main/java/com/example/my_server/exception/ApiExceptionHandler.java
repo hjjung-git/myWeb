@@ -15,13 +15,12 @@ import java.util.Map;
 /**
  * com.example.my_server.controller.api 패키지(REST API 컨트롤러) 전용 예외 처리.
  *
- * 기존 GlobalExceptionHandler(@ControllerAdvice)는 Thymeleaf 에러 뷰(error/404 등)를
- * 반환하도록 되어 있어, REST 컨트롤러에서 발생한 예외까지 그대로 넘어가면 JSON을
- * 기대하는 클라이언트(향후 React)에게 HTML이 내려가는 문제가 있다. API 패키지에만
- * 적용되는 @RestControllerAdvice를 따로 둬서 이 문제를 분리했다.
+ * 레거시 SSR 컨트롤러를 모두 정리한 뒤로는 이 서버의 유일한 컨트롤러 계층이
+ * controller.api 패키지뿐이라, 사실상 서버 전체의 예외 처리를 담당한다.
+ * basePackages를 그대로 두는 이유는 앞으로 api 패키지 밖에 다른 컨트롤러가
+ * 다시 생기더라도 이 핸들러가 의도치 않게 거기까지 적용되지 않도록 범위를
+ * 명시적으로 좁혀두기 위함이다.
  */
-// 같은 예외라도 범위 지정 없는 GlobalExceptionHandler(@ControllerAdvice)와
-// 겹칠 수 있어, api 패키지에 대해서는 이쪽이 우선 적용되도록 순서를 명시한다.
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(basePackages = "com.example.my_server.controller.api")
 public class ApiExceptionHandler {
@@ -42,7 +41,7 @@ public class ApiExceptionHandler {
         return errorResponse(HttpStatus.UNAUTHORIZED, "코드가 올바르지 않습니다.");
     }
 
-    // 매매일지 필수값 누락 등 (ApiPostController.validateTradeFields)
+    // 잘못된 입력값 등
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         return errorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
