@@ -1,7 +1,66 @@
+/* 색상 토큰 — 라이트가 기본값, [data-theme="dark"]에서 덮어씀.
+   예전에 만들었던 정적 포트폴리오 아티팩트의 배색(짙은 그린 포인트 + 따뜻한 오프화이트)을 그대로 가져왔다. */
+:root {
+  --bg: #f7f8f6;
+  --surface: #ffffff;
+  --surface-soft: #f0f2f0;
+  --text: #171a1c;
+  --text-dim: #5b6461;
+  --text-faint: #8b928f;
+  --border: #e1e5e2;
+  --accent: #0f6656;
+  --accent-strong: #0b4f43;
+  --accent-soft: #e4f2ee;
+  --accent-contrast: #ffffff;
+  --danger: #b23b3b;
+  --danger-border: #c86a6a;
+  --shadow: 0 1px 2px rgba(15, 25, 20, 0.04), 0 8px 24px -12px rgba(15, 25, 20, 0.1);
+}
+
+[data-theme="dark"] {
+  --bg: #10140f;
+  --surface: #171c17;
+  --surface-soft: #1d231d;
+  --text: #edf1ec;
+  --text-dim: #98a69f;
+  --text-faint: #69766f;
+  --border: #262e27;
+  --accent: #4fd9be;
+  --accent-strong: #7be6ce;
+  --accent-soft: rgba(79, 217, 190, 0.14);
+  --accent-contrast: #0c1310;
+  --danger: #e08080;
+  --danger-border: #8a4848;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px -12px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
 * {
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "IBM Plex Sans", "Noto Sans KR", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+h1, h2, h3 {
+  font-family: "Libre Franklin", "Noto Sans KR", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  margin: 0;
+  color: var(--text);
+}
+
+a {
+  color: inherit;
 }
