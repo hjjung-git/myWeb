@@ -56,9 +56,11 @@
 
 - [x] 게시글 쓰기 API(작성/수정/삭제) 추가 — `/api/posts` POST/PUT/DELETE에 hasRole("ADMIN") 적용, 매매일지 필수값 검증은 기존 SSR 쪽 규칙과 동일하게 맞춤. 로컬 빌드 검증 완료
 - [ ] 경력/프로젝트 소개용 포트폴리오 도메인 신설 — 매매일지(TRADE_LOG)는 제외 예정 도메인이라 REST 전환 우선순위에서 뺐고, 대신 실제 포트폴리오 사이트에 쓰일 새 도메인(`PortfolioItem`)을 추가함. 메인 목록은 요약만, 상세가 필요한 항목만 상세 API로 연결하는 구조(이전에 정했던 "요약 + 상세 페이지" 원칙 반영). 기존 암호화폐 보유현황 기능(Holding/PortfolioController)과 이름이 겹치지 않도록 `/api/portfolio-items`로 분리. CRUD 전체를 한 번에 만들었고, Flyway 마이그레이션(`V2__add_portfolio_item.sql`)도 같이 추가. 로컬 빌드에서 Flyway가 V2를 실제로 적용하는 것까지 확인 완료
+- [x] REST API 전환 대상 도메인 확정 — 뉴스(Article, 코인 시황 RSS 수집)와 기존 암호화폐 보유현황(Holding/PortfolioController)은 매매일지와 같은 트레이딩 계열 콘텐츠로 판단해 최종 포트폴리오 사이트에서 제외하기로 함. 두 도메인 모두 REST API로 전환하지 않고 레거시 상태로 남겨둠(향후 별도 프로젝트로 분리될 수 있음). 이로써 REST API 전환은 사이트에 실제로 쓰일 도메인(Post-일반 글, PortfolioItem) 기준으로 완료
+
+- [x] React 프론트엔드 초기 설정 — 기존 저장소 안에 `frontend/` 폴더로 추가(모노레포, 배포/버전 관리를 단순하게 유지하기 위함). 빌드 도구는 Vite 선택 — 지금 백엔드가 이미 API-First(JSON만 반환)로 전환되어 있어 화면 렌더링을 서버가 담당할 필요가 없고, Next.js처럼 별도 서버 프로세스를 자체 호스팅 환경에 추가로 얹지 않아도 됨. 개발 중 `/api` 요청은 Vite 프록시로 로컬 백엔드(8081)에 그대로 전달되도록 설정. `npm install` + `npm run dev` 로컬 실행 후 프론트엔드에서 백엔드 API 호출까지 성공 확인 완료
 
 ## 다음 단계
 
-- [ ] Controller REST API 전환 계속 — 나머지 도메인(User/Article/Portfolio) 조회·쓰기 API 추가
-- [ ] React 프론트엔드 구축, 포트폴리오 콘텐츠 통합
+- [ ] React 프론트엔드 본 구축, 포트폴리오 콘텐츠 통합
 - [ ] (개발 완료 후) 자체 하드웨어 상시 구동 + Cloudflare Tunnel 배포

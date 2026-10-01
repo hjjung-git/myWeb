@@ -100,7 +100,7 @@
 | :--- | :--- | :---: |
 | Step 1 | 로컬 개발 DB 전환 (H2 → 자체 구축 MySQL) | ✅ |
 | Step 2 | Flyway 도입 (스키마 버전 관리) | ✅ |
-| Step 3 | 기존 Controller REST API 전환 | ⬜ |
+| Step 3 | 기존 Controller REST API 전환 | ✅ |
 | Step 4 | React 프론트엔드 구축 및 포트폴리오 통합 | ⬜ |
 | Step 5 | 자체 호스팅 배포 (Cloudflare Tunnel) | ⬜ |
 
