@@ -42,3 +42,6 @@ _to_delete/
 
 ### Local secrets (per-machine, not shared via git) ###
 src/main/resources/application-local.properties
+
+### 업로드 파일 (자격증 합격확인증 PDF 등, app.upload.dir) ###
+uploads/

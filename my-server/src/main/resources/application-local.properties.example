@@ -22,3 +22,6 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 # SQL 로그는 logback-spring.xml의 org.hibernate.SQL DEBUG 로거 하나로만 찍는다
 # (spring.jpa.show-sql은 끔 — 같이 켜두면 Hibernate가 콘솔에 중복으로 또 찍어서 로그가 두 번씩 나왔음)
 spring.jpa.properties.hibernate.format_sql=true
+
+# 업로드 파일(자격증 합격확인증 PDF 등) 저장 루트 — my-server 실행 디렉터리 기준 상대경로.
+app.upload.dir=./uploads

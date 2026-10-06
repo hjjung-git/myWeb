@@ -511,6 +511,15 @@ button, .btn-primary, .btn-secondary, .btn-danger {
   align-items: center;
   gap: 0.9rem;
   box-shadow: var(--shadow);
+  /* 이제 카드 자체가 상세 페이지로 가는 <Link>(= <a>)라, 기본 링크 밑줄/색상을 지우고
+     클릭 가능하다는 걸 보여주는 hover 효과만 남긴다. */
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.cert-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 .cert-card .mark {
   width: 2.2rem;
@@ -533,6 +542,47 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 .cert-issuer {
   font-size: 0.8rem;
   color: var(--text-faint);
+}
+
+/* ---- certification detail ---- */
+.cert-detail-mark {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.cert-file-box {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.cert-pdf-viewer {
+  width: 100%;
+  height: 70vh;
+  min-height: 420px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.cert-file-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.cert-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.82rem;
 }
 
 /* ---- contact ---- */
@@ -648,4 +698,176 @@ button, .btn-primary, .btn-secondary, .btn-danger {
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.82rem;
   color: var(--text-dim);
+}
+
+/* ---- markdown rendering (Archive 글 본문 — 쓰기 화면 미리보기 + 상세 화면 공용) ---- */
+.markdown-body {
+  /* .portfolio-body(공용 클래스)의 white-space: pre-wrap을 여기서 되돌린다 — pre-wrap이 걸린 채로
+     있으면 markdown의 '한 줄바꿈(soft break, 같은 문단 안에서 줄만 바꾼 것)'까지 전부 실제 줄바꿈으로
+     보여버려서, 문단 사이 간격이 의도한 것보다 훨씬 넓어 보였다(각주 ①). 블록 구분(문단/제목/목록 등)은
+     이미 react-markdown이 실제 HTML 요소로 만들어주므로 pre-wrap 없이도 구조가 그대로 유지된다.
+     ① 한 줄 비우고 쓴 줄(진짜 문단 구분)은 원래도 정상이었고, 단순히 Enter 한 번만 친 줄바꿈이
+        pre-wrap 때문에 덩달아 눈에 보이는 줄바꿈으로 남아 간격이 누적된 것이었다. */
+  white-space: normal;
+}
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  margin: 1.3rem 0 0.6rem;
+  line-height: 1.3;
+  color: var(--text);
+}
+.markdown-body h1 { font-size: 1.45rem; }
+.markdown-body h2 { font-size: 1.22rem; }
+.markdown-body h3 { font-size: 1.06rem; }
+.markdown-body p {
+  margin: 0.75rem 0;
+  line-height: 1.75;
+}
+.markdown-body ul,
+.markdown-body ol {
+  margin: 0.6rem 0;
+  padding-left: 1.4rem;
+}
+.markdown-body li {
+  margin: 0.3rem 0;
+  line-height: 1.6;
+}
+.markdown-body blockquote {
+  margin: 1rem 0;
+  padding: 0.3rem 1rem;
+  border-left: 3px solid var(--border);
+  color: var(--text-dim);
+}
+.markdown-body code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.86em;
+  background: var(--accent-soft);
+  padding: 0.12rem 0.35rem;
+  border-radius: 4px;
+}
+.markdown-body pre {
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+.markdown-body a {
+  color: var(--accent-strong);
+}
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.92rem;
+}
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+}
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5rem 0;
+}
+.markdown-body > :first-child {
+  margin-top: 0;
+}
+
+/* ---- Obsidian 식 Live Preview markdown 에디터 (ArchiveForm — 쓰기 화면, CodeMirror 6 기반) ---- */
+.mle-cm {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.mle-cm .cm-editor {
+  height: 100%;
+}
+.mle-cm .cm-scroller {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  padding: 0.75rem 0.9rem;
+  min-height: 420px;
+  color: var(--text);
+}
+.mle-cm .cm-content {
+  caret-color: var(--accent-strong);
+}
+.mle-cm .cm-cursor {
+  border-left-color: var(--accent-strong);
+}
+.mle-cm .cm-selectionBackground,
+.mle-cm .cm-content ::selection {
+  background: var(--accent-soft) !important;
+}
+.mle-cm .cm-placeholder {
+  color: var(--text-faint);
+  font-style: normal;
+}
+.mle-cm .cm-gutters {
+  display: none;
+}
+
+/* 항상 켜져 있는 서식(커서 위치와 무관) */
+.cm-heading {
+  font-weight: 700;
+  line-height: 1.3;
+}
+.cm-heading-1 { font-size: 1.4rem; }
+.cm-heading-2 { font-size: 1.22rem; }
+.cm-heading-3 { font-size: 1.08rem; }
+.cm-heading-4,
+.cm-heading-5,
+.cm-heading-6 { font-size: 0.98rem; color: var(--text-dim); }
+.cm-strong { font-weight: 700; }
+.cm-em { font-style: italic; }
+.cm-inline-code,
+.cm-code-text {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.88em;
+  background: var(--accent-soft);
+  border-radius: 4px;
+  padding: 0.03rem 0.3rem;
+}
+.cm-quote-mark {
+  color: var(--text-faint);
+}
+.cm-quote-text {
+  color: var(--text-dim);
+  font-style: italic;
+}
+.cm-hr {
+  color: transparent;
+  border-bottom: 1px solid var(--border);
+}
+.cm-link-text {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+.cm-fence-mark {
+  color: var(--text-faint);
+}
+
+/* 커서가 그 줄에 있을 때만 보이는 markdown 기호 — 평소엔 숨겨짐(Decoration.replace) */
+.cm-mark {
+  color: var(--text-faint);
+}
+
+.mle-shortcuts-hint {
+  margin: 0.4rem 0 0;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--text-faint);
 }

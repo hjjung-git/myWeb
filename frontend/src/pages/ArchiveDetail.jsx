@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { apiGet, apiMutate } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 
@@ -53,7 +55,9 @@ function ArchiveDetail() {
 
       <h1>{post.title}</h1>
       <p className="portfolio-period">{post.username} · {formatDate(post.lastModifiedAt)}</p>
-      <div className="portfolio-body">{post.content}</div>
+      <div className="portfolio-body markdown-body">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
+      </div>
     </article>
   )
 }

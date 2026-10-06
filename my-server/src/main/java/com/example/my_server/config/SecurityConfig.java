@@ -66,7 +66,7 @@ public class SecurityConfig
 
                 // 접근 권한
                 .authorizeHttpRequests((auth) -> auth
-                        // /api/posts, /api/portfolio-items는 조회(GET)는 누구나, 쓰기(POST/PUT/DELETE)는 관리자만
+                        // /api/posts, /api/portfolio-items, /api/certifications는 조회(GET)는 누구나, 쓰기(POST/PUT/DELETE)는 관리자만
                         // — 아래 permitAll("/api/**")보다 먼저 와야 우선 적용된다
                         .requestMatchers(HttpMethod.POST, "/api/posts/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasRole("ADMIN")
@@ -74,6 +74,9 @@ public class SecurityConfig
                         .requestMatchers(HttpMethod.POST, "/api/portfolio-items/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/portfolio-items/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/portfolio-items/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/certifications/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/certifications/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/certifications/**").hasRole("ADMIN")
                         .requestMatchers("/api/**", "/h2-console/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

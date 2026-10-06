@@ -9,6 +9,29 @@ function resolveUrl(path) {
   return `${API_BASE_URL}${path}`
 }
 
+// <object>/<a href> 등 fetch를 거치지 않고 브라우저가 직접 요청하는 리소스(PDF 뷰어 등)에
+// 배포 후 cross-origin(Pages -> Tunnel) 상황에서도 올바른 절대 URL을 쓰기 위한 헬퍼.
+export function apiResourceUrl(path) {
+  return resolveUrl(path)
+}
+
+// apiMutate/apiUpload가 공유하는 응답 처리 — 실패 시 서버가 내려준 message를 최대한 꺼내 쓴다.
+async function handleResponse(res, path) {
+  if (!res.ok) {
+    let message = `요청 실패 (${res.status})`
+    try {
+      const data = await res.json()
+      if (data?.message) message = data.message
+    } catch {
+      // 응답 본문이 없는 경우(204 No Content 등)는 무시
+    }
+    throw new Error(message)
+  }
+
+  if (res.status === 204) return null
+  return res.json()
+}
+
 export async function apiGet(path) {
   // credentials: 'include' — same-origin(로컬 개발)에서는 'same-origin'과 동일하게 동작하고,
   // cross-origin(배포 후 Pages ↔ Tunnel)에서도 세션 쿠키를 실어 보내려면 이 값이어야 한다.
@@ -33,17 +56,24 @@ export async function apiMutate(path, method, body) {
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
 
-  if (!res.ok) {
-    let message = `요청 실패 (${res.status})`
-    try {
-      const data = await res.json()
-      if (data?.message) message = data.message
-    } catch {
-      // 응답 본문이 없는 경우(204 No Content 등)는 무시
-    }
-    throw new Error(message)
-  }
+  return handleResponse(res, path)
+}
 
-  if (res.status === 204) return null
-  return res.json()
+// 파일 업로드(multipart/form-data) 전용 — 자격증 합격확인증 PDF 업로드 등에 쓴다.
+// apiMutate와 달리 Content-Type 헤더를 직접 지정하지 않는다 — FormData를 쓰면 브라우저가
+// multipart 경계(boundary)를 포함한 Content-Type을 자동으로 채워주는데, 여기서 수동으로
+// 'multipart/form-data'만 지정하면 boundary가 빠져서 서버가 파일을 파싱하지 못한다.
+export async function apiUpload(path, method, formData) {
+  const csrf = await apiGet('/api/auth/csrf')
+
+  const res = await fetch(resolveUrl(path), {
+    method,
+    credentials: 'include',
+    headers: {
+      [csrf.headerName]: csrf.token,
+    },
+    body: formData,
+  })
+
+  return handleResponse(res, path)
 }
