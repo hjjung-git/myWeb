@@ -23,19 +23,19 @@
 - 프론트엔드 실행: macOS와 동일하게 `npm install && npm run dev`
 - `application-local.properties`는 `.gitignore`에 포함되어 있어 각 기기(맥북/Windows 데스크톱)에서 각자 `application-local.properties.example`을 복사해 자기 환경의 DB 접속정보를 채워야 함 — 원래부터 기기마다 각자 파일을 유지하는 구조라 멀티 기기 사용을 전제로 이미 설계되어 있었음.
 
-## 설치 버전 맞추기 체크리스트 (2026-10-02)
+## 설치 버전 맞추기 체크리스트 (2026-10-05 확정)
 
-두 기기(맥북/Windows 데스크톱)에서 같은 프로젝트를 오갈 때 버전 차이로 생기는 문제를 줄이기 위해, 기기별 설치 버전을 여기에 기록해두고 비교한다. 방침은 "둘 중 더 최신이면서 안정적인 버전으로 맞춘다" — 특정 기기 버전을 기준으로 고정하는 게 아니라, 비교 후 선택.
+두 기기(맥북/Windows 데스크톱)에서 같은 프로젝트를 오갈 때 버전 차이로 생기는 문제를 줄이기 위해, 기기별 설치 버전을 비교해 통일하기로 했다. macOS 쪽이 전반적으로 더 최신이라 **macOS 버전에 맞추는 것으로 확정**.
 
-| 항목 | Windows 데스크톱 | macOS (맥북) | 비고 |
+| 항목 | Windows 데스크톱 | macOS (맥북) | 결정 |
 |---|---|---|---|
-| Java | 21.0.2 (LTS, build 21.0.2+13) | 확인 필요 | `pom.xml`에 `java.version=21`로 고정 — 메이저 버전(21)은 반드시 일치해야 하고, 마이너/빌드 버전은 맞춰두면 더 좋음 |
-| Node.js | v22.12.0 | 확인 필요 | `package.json`에 버전 고정 안 돼 있어 엄격하게 맞출 필요는 없음 |
-| npm | 10.9.0 | 확인 필요 | Node.js에 동봉되는 버전을 그대로 사용 |
-| MySQL | 아직 미설치 | 확인 필요 | 8.0 이상이면 호환됨 — 로컬 개발 DB는 기기별로 독립적이라 데이터 자체를 맞출 필요는 없고, 서버 버전만 비슷하게 맞추면 됨 |
+| Java | 21.0.2 (build 21.0.2+13-LTS-58) | 21.0.2 (build 21.0.2+13-58) | 이미 일치 — `pom.xml`의 `java.version=21` 요구사항도 충족. 조치 불필요 |
+| Node.js | v22.12.0 | v26.8.2 | **Windows를 v26.8.2로 업그레이드** |
+| npm | 10.9.0 | 11.19.1 | Node.js 업그레이드 시 같이 따라옴 |
+| MySQL | 아직 미설치 | 9.7.2 (공식 Community Server 설치파일, `/usr/local/mysql`) | **Windows에 MySQL Community Server 9.7.x를 공식 Installer로 설치** |
 | Maven | - | - | `mvnw`/`mvnw.cmd`가 버전을 자체 관리해주므로 로컬 설치 버전은 신경 안 써도 됨 |
 
-다음에 맥북에 연결하면 같은 명령(`java -version`, `node -v`, `npm -v`, `mysql --version`)으로 맥 쪽 칸을 채우고, 둘을 비교해서 더 최신·안정 버전으로 통일할 계획.
+macOS의 MySQL은 Homebrew가 아니라 dev.mysql.com의 공식 Installer(DMG)로 설치된 상태(`brew list`에는 안 보이고, 실행 중인 `mysqld` 프로세스 경로로 확인함) — Windows에도 같은 공식 Installer(MSI)를 쓰면 배포 방식까지 맞출 수 있다.
 
 ## 범위 밖 — 상시 구동 서버와는 무관
 
