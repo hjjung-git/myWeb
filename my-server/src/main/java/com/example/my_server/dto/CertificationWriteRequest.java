@@ -19,7 +19,8 @@ public record CertificationWriteRequest(
         String issuer,
 
         LocalDate acquiredDate,
-        Integer displayOrder
+        Integer displayOrder,
+        Boolean planned
 ) {
     public Certification toEntity() {
         Certification certification = new Certification();
@@ -28,6 +29,7 @@ public record CertificationWriteRequest(
         certification.setIssuer(issuer);
         certification.setAcquiredDate(acquiredDate);
         certification.setDisplayOrder(displayOrder != null ? displayOrder : 0);
+        certification.setPlanned(Boolean.TRUE.equals(planned));
         return certification;
     }
 }

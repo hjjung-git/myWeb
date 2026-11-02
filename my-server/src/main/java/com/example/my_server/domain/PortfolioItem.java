@@ -38,6 +38,20 @@ public class PortfolioItem
 
     private String thumbnailPath;
 
+    // ---- 경력(EXPERIENCE) 전용 필드 — 프로젝트에서는 비워둔다.
+    // 회사명 = title, 근무 기간 = periodText, 담당 업무 = detailContent를 그대로 재사용한다.
+    @Column(length = 50)
+    private String employmentType;
+
+    @Column(length = 100)
+    private String department;
+
+    @Column(length = 50)
+    private String jobRank;
+
+    @Column(length = 500)
+    private String resignationReason;
+
     @Column(nullable = false)
     private Integer displayOrder = 0;
 
@@ -50,6 +64,10 @@ public class PortfolioItem
     public String getTechStack() { return techStack; }
     public String getLinkUrl() { return linkUrl; }
     public String getThumbnailPath() { return thumbnailPath; }
+    public String getEmploymentType() { return employmentType; }
+    public String getDepartment() { return department; }
+    public String getJobRank() { return jobRank; }
+    public String getResignationReason() { return resignationReason; }
     public Integer getDisplayOrder() { return displayOrder; }
 
     public void setType(PortfolioItemType type) { this.type = type; }
@@ -60,5 +78,9 @@ public class PortfolioItem
     public void setTechStack(String techStack) { this.techStack = techStack; }
     public void setLinkUrl(String linkUrl) { this.linkUrl = linkUrl; }
     public void setThumbnailPath(String thumbnailPath) { this.thumbnailPath = thumbnailPath; }
+    public void setEmploymentType(String employmentType) { this.employmentType = employmentType; }
+    public void setDepartment(String department) { this.department = department; }
+    public void setJobRank(String jobRank) { this.jobRank = jobRank; }
+    public void setResignationReason(String resignationReason) { this.resignationReason = resignationReason; }
     public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
 }

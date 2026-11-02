@@ -76,6 +76,7 @@ public class CertificationServiceImpl implements CertificationService
         existing.setIssuer(updated.getIssuer());
         existing.setAcquiredDate(updated.getAcquiredDate());
         existing.setDisplayOrder(updated.getDisplayOrder());
+        existing.setPlanned(updated.isPlanned());
         return existing;
     }
 

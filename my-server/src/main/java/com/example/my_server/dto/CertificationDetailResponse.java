@@ -12,7 +12,8 @@ public record CertificationDetailResponse(
         LocalDate acquiredDate,
         String certificateOriginalName,
         boolean hasCertificateFile,
-        Integer displayOrder
+        Integer displayOrder,
+        boolean planned
 ) {
     public static CertificationDetailResponse from(Certification certification) {
         return new CertificationDetailResponse(
@@ -23,7 +24,8 @@ public record CertificationDetailResponse(
                 certification.getAcquiredDate(),
                 certification.getCertificateOriginalName(),
                 certification.getCertificateStoredName() != null,
-                certification.getDisplayOrder()
+                certification.getDisplayOrder(),
+                certification.isPlanned()
         );
     }
 }

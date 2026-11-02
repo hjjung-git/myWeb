@@ -60,6 +60,10 @@ public class PortfolioItemServiceImpl implements PortfolioItemService
         existing.setTechStack(updated.getTechStack());
         existing.setLinkUrl(updated.getLinkUrl());
         existing.setThumbnailPath(updated.getThumbnailPath());
+        existing.setEmploymentType(updated.getEmploymentType());
+        existing.setDepartment(updated.getDepartment());
+        existing.setJobRank(updated.getJobRank());
+        existing.setResignationReason(updated.getResignationReason());
         existing.setDisplayOrder(updated.getDisplayOrder());
 
         return existing;

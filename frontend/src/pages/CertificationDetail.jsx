@@ -41,7 +41,7 @@ function CertificationDetail() {
     setDeleting(true)
     try {
       await apiMutate(`/api/certifications/${id}`, 'DELETE')
-      navigate('/#certifications')
+      navigate('/#certifications', { state: { restoreScroll: true } })
     } catch (err) {
       setError(err.message)
       setDeleting(false)
@@ -91,7 +91,8 @@ function CertificationDetail() {
 
   return (
     <article className="portfolio-detail" style={{ padding: 'clamp(28px, 5vw, 44px) 0' }}>
-      <Link to="/#certifications" className="back-link">← 목록으로</Link>
+      {/* 보던 위치로 돌아간다 (처음 들어온 화면이면 어학/자격증 섹션으로) */}
+      <Link to="/#certifications" state={{ restoreScroll: true }} className="back-link">← 목록으로</Link>
 
       {isAdmin && (
         <div className="detail-toolbar">
@@ -105,7 +106,10 @@ function CertificationDetail() {
       <div className="cert-detail-mark">{cert.mark}</div>
       <h1>{cert.name}</h1>
       {cert.issuer && <p className="portfolio-period">{cert.issuer}</p>}
-      {cert.acquiredDate && <p className="portfolio-period">합격일자 {formatDate(cert.acquiredDate)}</p>}
+      {cert.planned && <p className="portfolio-period">취득 예정</p>}
+      {cert.acquiredDate && (
+        <p className="portfolio-period">{cert.planned ? '응시 예정일' : '합격일자'} {formatDate(cert.acquiredDate)}</p>
+      )}
 
       <div className="cert-file-box">
         {cert.hasCertificateFile ? (
@@ -125,7 +129,7 @@ function CertificationDetail() {
             </div>
           </>
         ) : (
-          <p className="status">아직 등록된 합격확인증이 없습니다.</p>
+          <p className="status">아직 등록된 합격확인증(성적표)이 없습니다.</p>
         )}
 
         {isAdmin && (

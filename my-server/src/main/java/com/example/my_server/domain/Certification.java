@@ -44,6 +44,10 @@ public class Certification
     @Column(nullable = false)
     private Integer displayOrder = 0;
 
+    // true면 아직 취득 전인 "취득 예정" 항목 (예: 응시 예정인 어학 시험)
+    @Column(nullable = false)
+    private boolean planned = false;
+
     public Long getId() { return id; }
     public String getMark() { return mark; }
     public String getName() { return name; }
@@ -52,6 +56,7 @@ public class Certification
     public String getCertificateStoredName() { return certificateStoredName; }
     public String getCertificateOriginalName() { return certificateOriginalName; }
     public Integer getDisplayOrder() { return displayOrder; }
+    public boolean isPlanned() { return planned; }
 
     public void setMark(String mark) { this.mark = mark; }
     public void setName(String name) { this.name = name; }
@@ -60,4 +65,5 @@ public class Certification
     public void setCertificateStoredName(String certificateStoredName) { this.certificateStoredName = certificateStoredName; }
     public void setCertificateOriginalName(String certificateOriginalName) { this.certificateOriginalName = certificateOriginalName; }
     public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
+    public void setPlanned(boolean planned) { this.planned = planned; }
 }

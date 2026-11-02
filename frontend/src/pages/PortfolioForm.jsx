@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { apiGet, apiMutate } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 
@@ -12,6 +12,10 @@ const EMPTY = {
   techStack: '',
   linkUrl: '',
   thumbnailPath: '',
+  employmentType: '',
+  department: '',
+  jobRank: '',
+  resignationReason: '',
   displayOrder: 0,
 }
 
@@ -22,7 +26,12 @@ function PortfolioForm() {
   const navigate = useNavigate()
   const { isAdmin, loading } = useAuth()
 
-  const [form, setForm] = useState(EMPTY)
+  const [searchParams] = useSearchParams()
+  // /portfolio/new?type=EXPERIENCE 로 들어오면 처음부터 "경력" 입력 화면으로 연다.
+  const [form, setForm] = useState(() => ({
+    ...EMPTY,
+    type: searchParams.get('type') === 'EXPERIENCE' ? 'EXPERIENCE' : 'PROJECT',
+  }))
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [ready, setReady] = useState(!isEdit)
@@ -40,6 +49,10 @@ function PortfolioForm() {
           techStack: item.techStack ?? '',
           linkUrl: item.linkUrl ?? '',
           thumbnailPath: item.thumbnailPath ?? '',
+          employmentType: item.employmentType ?? '',
+          department: item.department ?? '',
+          jobRank: item.jobRank ?? '',
+          resignationReason: item.resignationReason ?? '',
           displayOrder: item.displayOrder ?? 0,
         })
         setReady(true)
@@ -59,12 +72,20 @@ function PortfolioForm() {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
+  // 경력은 요약/기술스택/링크/썸네일을 쓰지 않고, 프로젝트는 경력 전용 필드를 쓰지 않는다.
+  const isExp = form.type === 'EXPERIENCE'
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
     setSubmitting(true)
     try {
       const payload = { ...form, displayOrder: Number(form.displayOrder) || 0 }
+      if (isExp) {
+        Object.assign(payload, { summary: '', techStack: '', linkUrl: '', thumbnailPath: '' })
+      } else {
+        Object.assign(payload, { employmentType: '', department: '', jobRank: '', resignationReason: '' })
+      }
       const saved = isEdit
         ? await apiMutate(`/api/portfolio-items/${id}`, 'PUT', payload)
         : await apiMutate('/api/portfolio-items', 'POST', payload)
@@ -89,39 +110,82 @@ function PortfolioForm() {
       </label>
 
       <label>
-        제목
+        {isExp ? '회사명' : '제목'}
         <input value={form.title} onChange={(e) => update('title', e.target.value)} maxLength={100} required />
       </label>
 
-      <label>
-        요약 (목록에 보여질 짧은 설명)
-        <textarea value={form.summary} onChange={(e) => update('summary', e.target.value)} maxLength={300} rows={3} required />
-      </label>
+      {!isExp && (
+        <label>
+          요약 (목록에 보여질 짧은 설명)
+          <textarea value={form.summary} onChange={(e) => update('summary', e.target.value)} maxLength={300} rows={3} required />
+        </label>
+      )}
 
       <label>
-        상세 내용
+        {isExp ? '담당 업무' : '상세 내용'}
         <textarea value={form.detailContent} onChange={(e) => update('detailContent', e.target.value)} rows={8} />
       </label>
 
       <label>
-        기간
+        {isExp ? '근무 기간' : '기간'}
         <input value={form.periodText} onChange={(e) => update('periodText', e.target.value)} placeholder="예: 2025.03 - 2025.08" />
       </label>
 
-      <label>
-        기술 스택
-        <input value={form.techStack} onChange={(e) => update('techStack', e.target.value)} placeholder="예: Java, Spring Boot, MySQL" />
-      </label>
+      {isExp && (
+        <>
+          <label>
+            고용형태
+            <input
+              value={form.employmentType}
+              onChange={(e) => update('employmentType', e.target.value)}
+              list="employment-type-options"
+              maxLength={50}
+              placeholder="예: 정규직"
+            />
+            <datalist id="employment-type-options">
+              <option value="정규직" />
+              <option value="계약직" />
+              <option value="인턴" />
+              <option value="파견직" />
+              <option value="아르바이트" />
+            </datalist>
+          </label>
 
-      <label>
-        관련 링크
-        <input value={form.linkUrl} onChange={(e) => update('linkUrl', e.target.value)} placeholder="https://..." />
-      </label>
+          <label>
+            부서
+            <input value={form.department} onChange={(e) => update('department', e.target.value)} maxLength={100} />
+          </label>
 
-      <label>
-        썸네일 경로
-        <input value={form.thumbnailPath} onChange={(e) => update('thumbnailPath', e.target.value)} />
-      </label>
+          <label>
+            직급
+            <input value={form.jobRank} onChange={(e) => update('jobRank', e.target.value)} maxLength={50} />
+          </label>
+
+          <label>
+            퇴직 사유
+            <input value={form.resignationReason} onChange={(e) => update('resignationReason', e.target.value)} maxLength={500} />
+          </label>
+        </>
+      )}
+
+      {!isExp && (
+        <>
+          <label>
+            기술 스택
+            <input value={form.techStack} onChange={(e) => update('techStack', e.target.value)} placeholder="예: Java, Spring Boot, MySQL" />
+          </label>
+
+          <label>
+            관련 링크
+            <input value={form.linkUrl} onChange={(e) => update('linkUrl', e.target.value)} placeholder="https://..." />
+          </label>
+
+          <label>
+            썸네일 경로
+            <input value={form.thumbnailPath} onChange={(e) => update('thumbnailPath', e.target.value)} />
+          </label>
+        </>
+      )}
 
       <label>
         정렬 순서

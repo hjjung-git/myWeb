@@ -13,6 +13,10 @@ public record PortfolioItemDetailResponse(
         String techStack,
         String linkUrl,
         String thumbnailPath,
+        String employmentType,
+        String department,
+        String jobRank,
+        String resignationReason,
         Integer displayOrder
 ) {
     public static PortfolioItemDetailResponse from(PortfolioItem item) {
@@ -26,6 +30,10 @@ public record PortfolioItemDetailResponse(
                 item.getTechStack(),
                 item.getLinkUrl(),
                 item.getThumbnailPath(),
+                item.getEmploymentType(),
+                item.getDepartment(),
+                item.getJobRank(),
+                item.getResignationReason(),
                 item.getDisplayOrder()
         );
     }

@@ -8,6 +8,7 @@ const EMPTY = {
   name: '',
   issuer: '',
   acquiredDate: '',
+  planned: false,
   displayOrder: 0,
 }
 
@@ -34,6 +35,7 @@ function CertificationForm() {
           name: cert.name,
           issuer: cert.issuer ?? '',
           acquiredDate: cert.acquiredDate ?? '',
+          planned: Boolean(cert.planned),
           displayOrder: cert.displayOrder ?? 0,
         })
         setReady(true)
@@ -76,7 +78,7 @@ function CertificationForm() {
 
   return (
     <form className="portfolio-form" onSubmit={handleSubmit}>
-      <h1>{isEdit ? '자격증 수정' : '새 자격증 추가'}</h1>
+      <h1>{isEdit ? '어학 / 자격증 수정' : '새 어학 / 자격증 추가'}</h1>
 
       <label>
         마크 (카드에 보일 짧은 표시, 예: SQL)
@@ -84,7 +86,7 @@ function CertificationForm() {
       </label>
 
       <label>
-        자격증명
+        시험·자격증명 (예: TOEIC 900점)
         <input value={form.name} onChange={(e) => update('name', e.target.value)} maxLength={100} required />
       </label>
 
@@ -93,8 +95,13 @@ function CertificationForm() {
         <input value={form.issuer} onChange={(e) => update('issuer', e.target.value)} maxLength={150} />
       </label>
 
+      <label className="checkbox-label">
+        <input type="checkbox" checked={form.planned} onChange={(e) => update('planned', e.target.checked)} />
+        취득 예정 (아직 합격/취득 전)
+      </label>
+
       <label>
-        합격일자
+        {form.planned ? '응시 예정일' : '합격일자'}
         <input type="date" value={form.acquiredDate} onChange={(e) => update('acquiredDate', e.target.value)} />
       </label>
 

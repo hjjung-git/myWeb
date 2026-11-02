@@ -8,7 +8,8 @@ public record CertificationSummaryResponse(
         String mark,
         String name,
         String issuer,
-        boolean hasCertificateFile
+        boolean hasCertificateFile,
+        boolean planned
 ) {
     public static CertificationSummaryResponse from(Certification certification) {
         return new CertificationSummaryResponse(
@@ -16,7 +17,8 @@ public record CertificationSummaryResponse(
                 certification.getMark(),
                 certification.getName(),
                 certification.getIssuer(),
-                certification.getCertificateStoredName() != null
+                certification.getCertificateStoredName() != null,
+                certification.isPlanned()
         );
     }
 }
