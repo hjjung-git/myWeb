@@ -1,30 +1,28 @@
 import { useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useActiveSection } from '../lib/ActiveSectionContext.jsx'
 import About from './About.jsx'
 import Skills from './Skills.jsx'
 import PortfolioList from './PortfolioList.jsx'
 import Certifications from './Certifications.jsx'
-import ArchivePreview from './ArchivePreview.jsx'
 import Contact from './Contact.jsx'
 
-// 이력/커리어 흐름(About~Certifications)을 먼저 묶고, 보조 콘텐츠인 Archive(글/기록)는
-// 그 뒤 Contact 바로 앞에 배치한다 — 탭 순서(TabNav.jsx)와 동일하게 맞춘다.
-const SECTION_IDS = ['about', 'skills', 'portfolio', 'certifications', 'archive', 'contact']
+// 이력/커리어 흐름(About~Certifications) 뒤에 Contact — 탭 순서(TabNav.jsx)와 동일하게 맞춘다.
+// Archive는 홈의 섹션이 아니라 별도 화면(/archive)이다.
+const SECTION_IDS = ['about', 'skills', 'portfolio', 'certifications', 'contact']
 
 // 한 페이지 스크롤 홈 — 탭을 누르면 페이지 이동이 아니라 해당 섹션으로 부드럽게 스크롤된다.
 // 지금 보고 있는 섹션은 IntersectionObserver로 추적해 상단 탭 하이라이트에 반영한다.
 function Home() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { setActiveId } = useActiveSection()
 
-  // 다른 라우트(아카이브 전체 목록, 상세/수정 화면 등)에서 "/#section" 형태로 돌아왔을 때 그 섹션으로 스크롤.
+  // "/#section"으로 들어왔을 때의 스크롤과, 상세 화면에서 돌아왔을 때의 위치 복원은 ScrollManager가 맡는다.
+  // 여기서는 예전 링크(/#archive)만 Archive 목록으로 보낸다.
   useEffect(() => {
-    if (!location.hash) return
-    const id = location.hash.slice(1)
-    const el = document.getElementById(id)
-    el?.scrollIntoView({ behavior: 'smooth' })
-  }, [location.hash])
+    if (location.hash === '#archive') navigate('/archive', { replace: true })
+  }, [location.hash, navigate])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -50,7 +48,6 @@ function Home() {
       <Skills />
       <PortfolioList />
       <Certifications />
-      <ArchivePreview />
       <Contact />
     </>
   )

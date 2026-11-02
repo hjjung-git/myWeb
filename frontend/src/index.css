@@ -1,6 +1,9 @@
 /* 색상 토큰 — 라이트가 기본값, [data-theme="dark"]에서 덮어씀.
    예전에 만들었던 정적 포트폴리오 아티팩트의 배색(짙은 그린 포인트 + 따뜻한 오프화이트)을 그대로 가져왔다. */
 :root {
+  /* 글꼴 — Pretendard는 한글과 영문(Inter 기반)을 한 폰트로 맞춰줘서 영문 자간이 넓어 보이던 문제를 없앤다. */
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --bg: #f7f8f6;
   --surface: #ffffff;
   --surface-soft: #f0f2f0;
@@ -47,15 +50,15 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "IBM Plex Sans", "Noto Sans KR", system-ui, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 h1, h2, h3 {
-  font-family: "Libre Franklin", "Noto Sans KR", system-ui, sans-serif;
-  letter-spacing: -0.01em;
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
   text-wrap: balance;
   margin: 0;
   color: var(--text);

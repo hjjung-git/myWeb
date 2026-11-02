@@ -8,6 +8,14 @@ const GROUPS = [
     tags: ['Neo4j', 'Cypher', 'APOC', '온톨로지 설계', 'RDF/OWL (학습중)'],
   },
   {
+    name: 'FDE Focus',
+    tags: ['낯선 도메인 빠른 학습', '민감 데이터 취급', '요구사항 → 데이터 모델링'],
+  },
+  {
+    name: 'AI 활용',
+    tags: ['오케스트레이션 자동화', '에이전트 가드레일', 'Human-in-the-loop 설계', '병렬 개발 (git worktree)'],
+  },
+  {
     name: 'Language',
     tags: ['Python', 'Java', 'JavaScript', 'SQL', 'Cypher', 'RDF/OWL', 'C/C++'],
   },
