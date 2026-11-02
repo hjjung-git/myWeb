@@ -15,6 +15,12 @@ export function apiResourceUrl(path) {
   return resolveUrl(path)
 }
 
+// markdown 안의 이미지 주소 — 서버에 올린 이미지(/api/images/..)만 위와 같이 절대 URL로 바꾸고,
+// 외부 이미지 주소(https://..)는 그대로 둔다.
+export function resolveImageSrc(src) {
+  return src.startsWith('/api/') ? resolveUrl(src) : src
+}
+
 // apiMutate/apiUpload가 공유하는 응답 처리 — 실패 시 서버가 내려준 message를 최대한 꺼내 쓴다.
 async function handleResponse(res, path) {
   if (!res.ok) {

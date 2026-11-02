@@ -1,80 +1,76 @@
-import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { apiGet } from '../lib/api.js'
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../lib/AuthContext.jsx'
+import { UNCATEGORIZED, LEVEL_PARAMS, categoryLink, filterPathFrom, pathOf, startsWith } from '../lib/archiveTree.js'
 
 function formatDate(iso) {
   if (!iso) return ''
   return new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
-// 아카이브(글/기록) 목록. 과거엔 매매일지(TRADE_LOG) 타입도 같은 도메인에 있었으나,
-// 백엔드 레거시 정리 때 그 기능 자체가 완전히 삭제되어 이제 Post는 단일 글 모델이다.
-// 백엔드가 Page 응답(Spring Data)을 그대로 주기 때문에 content/totalPages/number를 그대로 쓴다.
+// Archive 목록 — ?category=대분류&sub=중분류&minor=소분류 로 걸러서 보여준다(없으면 전체 글).
+// 글 목록은 ArchiveLayout이 받아온 전체 요약을 그대로 쓰고, 최신 글이 위에 오게 둔다.
 function ArchiveList() {
   const { isAdmin } = useAuth()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const page = Number(searchParams.get('page') || 0)
-  const [data, setData] = useState(null)
-  const [error, setError] = useState(null)
+  const { posts, indexError } = useOutletContext()
+  const [searchParams] = useSearchParams()
+  const filterPath = filterPathFrom(searchParams)
+  const depth = filterPath.length
 
-  useEffect(() => {
-    setData(null)
-    apiGet(`/api/posts?page=${page}`)
-      .then(setData)
-      .catch((err) => setError(err.message))
-  }, [page])
+  const filtered = posts ? posts.filter((post) => startsWith(pathOf(post), filterPath)) : null
 
-  function goToPage(p) {
-    setSearchParams(p === 0 ? {} : { page: String(p) })
-  }
+  // 분류를 보고 있는 중에 새 글을 쓰면 그 분류가 미리 채워지게 한다(미분류는 제외).
+  const newParams = new URLSearchParams()
+  if (filterPath[0] !== UNCATEGORIZED) filterPath.forEach((name, i) => newParams.set(LEVEL_PARAMS[i], name))
+  const newLink = newParams.toString() ? `/archive/new?${newParams}` : '/archive/new'
 
   return (
-    <section className="portfolio-section">
+    <section className="archive-page">
       <div className="section-head">
         <div>
-          <p className="eyebrow">Archive</p>
-          <h2 className="section-title">기록</h2>
+          <p className="eyebrow">
+            {depth === 0 ? (
+              'Archive'
+            ) : (
+              <>
+                <Link to="/archive">Archive</Link>
+                {filterPath.slice(0, -1).map((name, i) => (
+                  <span key={name}>
+                    {' › '}
+                    <Link to={categoryLink(...filterPath.slice(0, i + 1))}>{name}</Link>
+                  </span>
+                ))}
+              </>
+            )}
+          </p>
+          <h2 className="section-title">{depth === 0 ? '전체 글' : filterPath[depth - 1]}</h2>
         </div>
         {isAdmin && (
-          <Link to="/archive/new" className="btn-primary">+ 새 글 작성</Link>
+          <Link to={newLink} className="btn-primary">+ 새 글 작성</Link>
         )}
       </div>
 
-      {error && <p className="status status-error">목록을 불러오지 못했습니다. ({error})</p>}
-      {!error && !data && <p className="status">불러오는 중...</p>}
-      {!error && data && data.content.length === 0 && <p className="status">아직 작성된 글이 없습니다.</p>}
+      {indexError && <p className="status status-error">목록을 불러오지 못했습니다. ({indexError})</p>}
+      {!indexError && !filtered && <p className="status">불러오는 중...</p>}
+      {!indexError && filtered && filtered.length === 0 && <p className="status">아직 작성된 글이 없습니다.</p>}
 
-      {!error && data && data.content.length > 0 && (
-        <>
-          <ul className="post-list">
-            {data.content.map((post) => (
+      {!indexError && filtered && filtered.length > 0 && (
+        <ul className="post-list">
+          {filtered.map((post) => {
+            // 지금 보고 있는 분류 바로 아래 단계의 이름을 태그로 보여준다.
+            const tag = pathOf(post)[depth]
+            return (
               <li key={post.id} className="post-row">
                 <Link to={`/archive/${post.id}`}>
-                  <span className="post-title">{post.title}</span>
+                  <span className="post-title">
+                    {tag && <span className="post-cat">{tag}</span>}
+                    {post.title}
+                  </span>
                   <span className="post-meta">{formatDate(post.lastModifiedAt)}</span>
                 </Link>
               </li>
-            ))}
-          </ul>
-
-          {data.totalPages > 1 && (
-            <div className="pagination">
-              <button type="button" className="btn-secondary" disabled={page === 0} onClick={() => goToPage(page - 1)}>
-                ← 이전
-              </button>
-              <span className="page-indicator">{page + 1} / {data.totalPages}</span>
-              <button
-                type="button"
-                className="btn-secondary"
-                disabled={page >= data.totalPages - 1}
-                onClick={() => goToPage(page + 1)}
-              >
-                다음 →
-              </button>
-            </div>
-          )}
-        </>
+            )
+          })}
+        </ul>
       )}
     </section>
   )

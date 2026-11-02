@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * 글(아카이브/인사이트) 조회·작성용 REST API.
  *
@@ -50,6 +52,14 @@ public class ApiPostController {
         Pageable pageable = PageRequest.of(page, 15, Sort.by(Sort.Direction.DESC, "id"));
         Page<Post> posts = postService.list(keyword, pageable);
         return posts.map(PostSummaryResponse::from);
+    }
+
+    // Archive 사이드바 트리용 — 페이지 없이 전체 글의 요약(제목/분류/날짜)만 준다.
+    @GetMapping("/index")
+    public List<PostSummaryResponse> index() {
+        return postService.listAll().stream()
+                .map(PostSummaryResponse::from)
+                .toList();
     }
 
     @GetMapping("/{id}")

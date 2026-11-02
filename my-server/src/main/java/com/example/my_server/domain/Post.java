@@ -29,6 +29,16 @@ public class Post
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content; // 글 내용
 
+    // Archive 사이드바 트리용 분류 (대분류 / 중분류 / 소분류). 대분류가 비어 있으면 "미분류"로 보인다.
+    @Column(length = 50)
+    private String category; // 대분류
+
+    @Column(length = 50)
+    private String subcategory; // 중분류
+
+    @Column(length = 50)
+    private String minorCategory; // 소분류
+
     // 엔티티 생성 및 업데이트 시 현재 시간을 자동으로 lastModifiedAt 필드에 저장
     @LastModifiedDate
     private ZonedDateTime lastModifiedAt;
@@ -55,6 +65,12 @@ public class Post
     public void setUsername(String username) { this.username = username; }
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+    public String getSubcategory() { return subcategory; }
+    public void setSubcategory(String subcategory) { this.subcategory = subcategory; }
+    public String getMinorCategory() { return minorCategory; }
+    public void setMinorCategory(String minorCategory) { this.minorCategory = minorCategory; }
     public ZonedDateTime getLastModifiedAt() { return lastModifiedAt; }
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }

@@ -14,12 +14,29 @@ public record PostWriteRequest(
         String title,
 
         @NotBlank(message = "내용은 비워둘 수 없습니다.")
-        String content
+        String content,
+
+        @Size(max = 50, message = "대분류는 50자를 넘을 수 없습니다.")
+        String category,
+
+        @Size(max = 50, message = "중분류는 50자를 넘을 수 없습니다.")
+        String subcategory,
+
+        @Size(max = 50, message = "소분류는 50자를 넘을 수 없습니다.")
+        String minorCategory
 ) {
     public Post toEntity() {
         Post post = new Post();
         post.setTitle(title);
         post.setContent(content);
+        post.setCategory(blankToNull(category));
+        // 상위 분류 없이 하위 분류만 있는 건 트리에서 의미가 없어서 같이 비운다.
+        post.setSubcategory(post.getCategory() == null ? null : blankToNull(subcategory));
+        post.setMinorCategory(post.getSubcategory() == null ? null : blankToNull(minorCategory));
         return post;
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

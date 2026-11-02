@@ -77,6 +77,10 @@ public class SecurityConfig
                         .requestMatchers(HttpMethod.POST, "/api/certifications/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/certifications/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/certifications/**").hasRole("ADMIN")
+                        // Archive 글 이미지: 업로드는 관리자만, 조회(GET)는 누구나
+                        .requestMatchers(HttpMethod.POST, "/api/images/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/images/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/images/**").hasRole("ADMIN")
                         .requestMatchers("/api/**", "/h2-console/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

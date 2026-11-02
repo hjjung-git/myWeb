@@ -12,7 +12,10 @@ public record PostDetailResponse(
         String title,
         String username,
         String content,
-        ZonedDateTime lastModifiedAt
+        ZonedDateTime lastModifiedAt,
+        String category,
+        String subcategory,
+        String minorCategory
 ) {
     public static PostDetailResponse from(Post post) {
         return new PostDetailResponse(
@@ -20,7 +23,10 @@ public record PostDetailResponse(
                 post.getTitle(),
                 post.getUsername(),
                 post.getContent(),
-                post.getLastModifiedAt()
+                post.getLastModifiedAt(),
+                post.getCategory(),
+                post.getSubcategory(),
+                post.getMinorCategory()
         );
     }
 }

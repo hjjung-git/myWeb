@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { apiGet, apiMutate } from '../lib/api.js'
+import { apiGet, apiMutate, resolveImageSrc } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
+import { categoryLink } from '../lib/archiveTree.js'
 
 function formatDate(iso) {
   if (!iso) return ''
@@ -14,6 +15,8 @@ function ArchiveDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { isAdmin } = useAuth()
+  // ArchiveLayout이 사이드바 순서대로 펼쳐둔 글 목록 — 이전/다음 글 계산과 삭제 후 사이드바 갱신에 쓴다.
+  const { ordered, reload } = useOutletContext()
   const [post, setPost] = useState(null)
   const [error, setError] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -30,7 +33,8 @@ function ArchiveDetail() {
     setDeleting(true)
     try {
       await apiMutate(`/api/posts/${id}`, 'DELETE')
-      navigate('/archive')
+      await reload()
+      navigate(categoryLink(post?.category, post?.subcategory, post?.minorCategory), { state: { restoreScroll: true } })
     } catch (err) {
       setError(err.message)
       setDeleting(false)
@@ -40,9 +44,33 @@ function ArchiveDetail() {
   if (error) return <p className="status status-error">글을 불러오지 못했습니다. ({error})</p>
   if (!post) return <p className="status">불러오는 중...</p>
 
+  const index = ordered.findIndex((p) => p.id === post.id)
+  const prev = index > 0 ? ordered[index - 1] : null
+  const next = index >= 0 && index < ordered.length - 1 ? ordered[index + 1] : null
+
   return (
-    <article className="portfolio-detail" style={{ padding: 'clamp(28px, 5vw, 44px) 0' }}>
-      <Link to="/archive" className="back-link">← 목록으로</Link>
+    <article className="portfolio-detail archive-article">
+      <p className="archive-breadcrumb">
+        <Link to="/archive" state={{ restoreScroll: true }}>Archive</Link>
+        {post.category && (
+          <>
+            {' › '}
+            <Link to={categoryLink(post.category)} state={{ restoreScroll: true }}>{post.category}</Link>
+          </>
+        )}
+        {post.category && post.subcategory && (
+          <>
+            {' › '}
+            <Link to={categoryLink(post.category, post.subcategory)} state={{ restoreScroll: true }}>{post.subcategory}</Link>
+          </>
+        )}
+        {post.category && post.subcategory && post.minorCategory && (
+          <>
+            {' › '}
+            <Link to={categoryLink(post.category, post.subcategory, post.minorCategory)} state={{ restoreScroll: true }}>{post.minorCategory}</Link>
+          </>
+        )}
+      </p>
 
       {isAdmin && (
         <div className="detail-toolbar">
@@ -56,8 +84,33 @@ function ArchiveDetail() {
       <h1>{post.title}</h1>
       <p className="portfolio-period">{post.username} · {formatDate(post.lastModifiedAt)}</p>
       <div className="portfolio-body markdown-body">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            // 서버에 올린 이미지(/api/images/..)는 배포 환경에서도 열리도록 절대 주소로 바꿔서 보여준다.
+            img: ({ src = '', alt = '' }) => <img src={resolveImageSrc(src)} alt={alt} loading="lazy" />,
+          }}
+        >
+          {post.content}
+        </ReactMarkdown>
       </div>
+
+      {(prev || next) && (
+        <nav className="archive-pager" aria-label="이전/다음 글">
+          {prev ? (
+            <Link to={`/archive/${prev.id}`} className="pager-link pager-prev">
+              <span className="pager-label">← 이전 글</span>
+              <span className="pager-title">{prev.title}</span>
+            </Link>
+          ) : <span />}
+          {next ? (
+            <Link to={`/archive/${next.id}`} className="pager-link pager-next">
+              <span className="pager-label">다음 글 →</span>
+              <span className="pager-title">{next.title}</span>
+            </Link>
+          ) : <span />}
+        </nav>
+      )}
     </article>
   )
 }

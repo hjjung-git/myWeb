@@ -12,14 +12,20 @@ public record PostSummaryResponse(
         Long id,
         String title,
         String username,
-        ZonedDateTime lastModifiedAt
+        ZonedDateTime lastModifiedAt,
+        String category,
+        String subcategory,
+        String minorCategory
 ) {
     public static PostSummaryResponse from(Post post) {
         return new PostSummaryResponse(
                 post.getId(),
                 post.getTitle(),
                 post.getUsername(),
-                post.getLastModifiedAt()
+                post.getLastModifiedAt(),
+                post.getCategory(),
+                post.getSubcategory(),
+                post.getMinorCategory()
         );
     }
 }

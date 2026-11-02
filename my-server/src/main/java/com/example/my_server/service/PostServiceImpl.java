@@ -15,6 +15,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @Transactional(readOnly = true)
 public class PostServiceImpl implements PostService
@@ -35,6 +37,12 @@ public class PostServiceImpl implements PostService
         return hasKeyword
                 ? postRepository.findByTitleContainingOrContentContaining(keyword, keyword, pageable)
                 : postRepository.findAll(pageable);
+    }
+
+    // Archive 사이드바(카테고리 트리)용 전체 목록 — 본문 없이 요약만 쓰고, 정렬/그룹핑은 프론트에서 한다.
+    @Override
+    public List<Post> listAll() {
+        return postRepository.findAllByOrderByIdDesc();
     }
 
     // ID로 포스트 찾기
@@ -109,6 +117,9 @@ public class PostServiceImpl implements PostService
 
         existingPost.setTitle(updatedPost.getTitle());
         existingPost.setContent(updatedPost.getContent());
+        existingPost.setCategory(updatedPost.getCategory());
+        existingPost.setSubcategory(updatedPost.getSubcategory());
+        existingPost.setMinorCategory(updatedPost.getMinorCategory());
 
         return existingPost;
     }

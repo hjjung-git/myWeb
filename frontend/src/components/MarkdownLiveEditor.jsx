@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { EditorState, EditorSelection, Prec, RangeSetBuilder } from '@codemirror/state'
-import { EditorView, Decoration, ViewPlugin, keymap, placeholder as placeholderExt } from '@codemirror/view'
+import { EditorView, Decoration, ViewPlugin, WidgetType, keymap, placeholder as placeholderExt } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { syntaxTree } from '@codemirror/language'
 import { markdown } from '@codemirror/lang-markdown'
+import { resolveImageSrc } from '../lib/api.js'
 
 // Obsidian의 "Live Preview"와 같은 방식 — CodeMirror 6(Obsidian이 실제로 쓰는 에디터 엔진) 위에,
 // 커서가 있는 줄은 markdown 원문(#, **, ` 등)이 그대로 보이고, 커서가 벗어난 줄은 그 기호가
@@ -15,6 +16,42 @@ import { markdown } from '@codemirror/lang-markdown'
 // 코드블록 내부 줄과 표, 목록 기호(-, 1.)는 이번엔 "항상 그대로 보이는" 수준으로만 다루고,
 // 완전한 렌더링(진짜 표, 코드 하이라이트)은 저장 후 보는 화면(ArchiveDetail, react-markdown)에서
 // 보장된다.
+
+// 업로드가 끝나기 전 문서에 잠깐 들어가는 자리표시 URL의 접두어
+const UPLOADING_PREFIX = 'uploading:'
+
+// 커서가 없는 줄의 ![설명](주소)를 실제 이미지로 바꿔 보여주는 위젯 (Obsidian Live Preview처럼)
+class ImageWidget extends WidgetType {
+  constructor(src, alt) {
+    super()
+    this.src = src
+    this.alt = alt
+  }
+
+  eq(other) {
+    return other.src === this.src && other.alt === this.alt
+  }
+
+  toDOM() {
+    const wrap = document.createElement('span')
+    wrap.className = 'cm-image-widget'
+    if (this.src.startsWith(UPLOADING_PREFIX)) {
+      wrap.classList.add('cm-image-uploading')
+      wrap.textContent = `이미지 업로드 중… (${this.alt})`
+      return wrap
+    }
+    const img = document.createElement('img')
+    img.src = resolveImageSrc(this.src)
+    img.alt = this.alt
+    img.loading = 'lazy'
+    wrap.appendChild(img)
+    return wrap
+  }
+
+  ignoreEvent() {
+    return false
+  }
+}
 
 function lineOverlaps(state, pos, sel) {
   const line = state.doc.lineAt(pos)
@@ -103,6 +140,25 @@ function buildDecorations(view) {
 
         if (name === 'HorizontalRule') {
           style(node.from, node.to, lineOverlaps(state, node.from, sel) ? 'cm-mark' : 'cm-hr')
+          return
+        }
+
+        if (name === 'Image') {
+          // 커서가 있는 줄은 원문(![..](..))을 그대로 보여주고, 벗어나면 이미지로 바꾼다.
+          if (!lineOverlaps(state, node.from, sel)) {
+            const marks = node.getChildren('LinkMark')
+            const urlNode = node.getChild('URL')
+            const alt = marks.length >= 2 ? state.doc.sliceString(marks[0].to, marks[1].from) : ''
+            const src = urlNode ? state.doc.sliceString(urlNode.from, urlNode.to) : ''
+            if (src) {
+              items.push({
+                from: node.from,
+                to: node.to,
+                deco: Decoration.replace({ widget: new ImageWidget(src, alt) }),
+              })
+              return false
+            }
+          }
           return
         }
 
@@ -253,11 +309,69 @@ const formatKeymap = Prec.highest(
   ]),
 )
 
-function MarkdownLiveEditor({ initialValue, onChange, placeholder: placeholderText }) {
+function isImageFile(file) {
+  return file.type.startsWith('image/')
+}
+
+// onUploadImage(file) => Promise<{ url }> 를 주면 이미지 붙여넣기 / 끌어놓기 / "이미지 첨부" 버튼이 켜진다.
+// 업로드하는 동안에는 자리표시(![이름](uploading:..))를 먼저 넣고, 끝나면 실제 주소로 바꾼다 —
+// 그래서 업로드 중에 다른 곳을 계속 편집해도 위치가 어긋나지 않는다.
+function MarkdownLiveEditor({ initialValue, onChange, placeholder: placeholderText, onUploadImage, onUploadError }) {
   const containerRef = useRef(null)
   const viewRef = useRef(null)
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
+  const uploadRef = useRef(onUploadImage)
+  uploadRef.current = onUploadImage
+  const uploadErrorRef = useRef(onUploadError)
+  uploadErrorRef.current = onUploadError
+
+  function replaceText(view, text, replacement) {
+    if (viewRef.current !== view) return // 업로드 중에 에디터가 닫힌 경우
+    const index = view.state.doc.toString().indexOf(text)
+    if (index >= 0) view.dispatch({ changes: { from: index, to: index + text.length, insert: replacement } })
+  }
+
+  async function uploadAndInsert(view, files, pos) {
+    let at = pos
+    for (const file of files.filter(isImageFile)) {
+      const alt = file.name.replace(/\.[^.]+$/, '').replace(/[[\]]/g, '') || 'image'
+      const token = `${UPLOADING_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      const placeholderMd = `![${alt}](${token})`
+
+      // 이미지는 한 줄을 통째로 차지하게 넣는다.
+      const insertAt = Math.min(at ?? view.state.selection.main.head, view.state.doc.length)
+      const line = view.state.doc.lineAt(insertAt)
+      const insert = `${insertAt > line.from ? '\n' : ''}${placeholderMd}\n`
+      view.dispatch({ changes: { from: insertAt, insert }, selection: { anchor: insertAt + insert.length } })
+      at = insertAt + insert.length
+
+      try {
+        const { url } = await uploadRef.current(file)
+        replaceText(view, placeholderMd, `![${alt}](${url})`)
+      } catch (err) {
+        replaceText(view, `${placeholderMd}\n`, '')
+        replaceText(view, placeholderMd, '')
+        uploadErrorRef.current?.(err.message || '이미지를 올리지 못했습니다.')
+      }
+    }
+  }
+
+  // 숨겨진 <input>을 DOM에 붙이지 않고 만든다 — 에디터가 폼의 <label> 안에 있어도
+  // 라벨 클릭이 파일 선택창을 여는 일이 없게 하기 위해서다.
+  function openFilePicker() {
+    const view = viewRef.current
+    if (!view) return
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/png,image/jpeg,image/gif,image/webp'
+    input.multiple = true
+    input.onchange = () => {
+      const files = [...(input.files || [])]
+      if (files.length > 0) uploadAndInsert(view, files)
+    }
+    input.click()
+  }
 
   useEffect(() => {
     const state = EditorState.create({
@@ -270,6 +384,25 @@ function MarkdownLiveEditor({ initialValue, onChange, placeholder: placeholderTe
         EditorView.lineWrapping,
         livePreviewPlugin,
         placeholderExt(placeholderText || ''),
+        EditorView.domEventHandlers({
+          paste(event, view) {
+            if (!uploadRef.current) return false
+            const files = [...(event.clipboardData?.files || [])].filter(isImageFile)
+            if (files.length === 0) return false
+            event.preventDefault()
+            uploadAndInsert(view, files)
+            return true
+          },
+          drop(event, view) {
+            if (!uploadRef.current) return false
+            const files = [...(event.dataTransfer?.files || [])].filter(isImageFile)
+            if (files.length === 0) return false
+            event.preventDefault()
+            const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
+            uploadAndInsert(view, files, pos ?? undefined)
+            return true
+          },
+        }),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChangeRef.current(update.state.doc.toString())
@@ -289,7 +422,19 @@ function MarkdownLiveEditor({ initialValue, onChange, placeholder: placeholderTe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  return <div className="mle mle-cm" ref={containerRef} />
+  return (
+    <div className="mle-wrap">
+      {onUploadImage && (
+        <div className="mle-toolbar">
+          <button type="button" className="btn-secondary" onClick={openFilePicker}>
+            이미지 첨부
+          </button>
+          <span className="mle-toolbar-hint">붙여넣기(⌘/Ctrl+V)나 끌어놓기로도 넣을 수 있어요</span>
+        </div>
+      )}
+      <div className="mle mle-cm" ref={containerRef} />
+    </div>
+  )
 }
 
 export default MarkdownLiveEditor
