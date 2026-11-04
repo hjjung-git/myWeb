@@ -5,7 +5,7 @@
     <!--  공통 로그 패턴 정의      -->
     <!-- ======================== -->
     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
-    <property name="LOG_DIR" value="/home/ec2-user/logs"/>
+    <property name="LOG_DIR" value="${LOG_DIR:-./logs}"/>
 
     <!-- ======================== -->
     <!--  콘솔 출력               -->
