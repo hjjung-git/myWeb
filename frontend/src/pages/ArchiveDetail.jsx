@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { apiGet, apiMutate, resolveImageSrc } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 import { categoryLink } from '../lib/archiveTree.js'
+import MermaidBlock from '../components/MermaidBlock.jsx'
 
 function formatDate(iso) {
   if (!iso) return ''
@@ -89,6 +90,16 @@ function ArchiveDetail() {
           components={{
             // 서버에 올린 이미지(/api/images/..)는 배포 환경에서도 열리도록 절대 주소로 바꿔서 보여준다.
             img: ({ src = '', alt = '' }) => <img src={resolveImageSrc(src)} alt={alt} loading="lazy" />,
+            // ```mermaid 코드 블록은 코드 대신 그림으로 그린다. 나머지 코드 블록은 그대로.
+            pre: ({ node, children, ...rest }) => {
+              const codeEl = node?.children?.[0]
+              const classes = codeEl?.properties?.className || []
+              if (codeEl?.tagName === 'code' && classes.includes('language-mermaid')) {
+                const text = (codeEl.children || []).map((child) => child.value || '').join('')
+                return <MermaidBlock code={text.trim()} />
+              }
+              return <pre {...rest}>{children}</pre>
+            },
           }}
         >
           {post.content}

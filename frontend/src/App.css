@@ -921,14 +921,18 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 }
 
 /* ---- archive: 카테고리 트리 레이아웃 (gyoogle.dev 같은 문서형 구조) ---- */
-/* .site-main(840px)보다 넓게 쓰기 위해 화면 가운데를 기준으로 폭을 넓힌다. */
+/* Archive는 가운데 정렬하지 않고 화면 왼쪽(헤더와 같은 여백)부터 붙인다 —
+   긴 글 제목이 들어가는 사이드바에 폭을 넉넉히 주고, 본문은 읽기 좋은 폭까지만 넓힌다.
+   .site-main(840px, 가운데 정렬) 안에 있으므로 margin-left로 화면 왼쪽 끝까지 끌어낸다. */
 .archive-layout {
+  --archive-gutter: clamp(20px, 5vw, 56px);
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 320px) minmax(0, 820px);
+  justify-content: start;
   gap: clamp(28px, 4vw, 56px);
   align-items: start;
-  width: min(1120px, calc(100vw - 48px));
-  margin-left: calc(50% - min(560px, 50vw - 24px));
+  width: calc(100vw - var(--archive-gutter) * 2);
+  margin-left: calc(50% - 50vw + var(--archive-gutter));
 }
 .archive-content {
   min-width: 0;
@@ -1213,4 +1217,35 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 .cm-image-uploading {
   font-style: italic;
   color: var(--text-faint);
+}
+
+/* ---- mermaid 그림 ---- */
+.mermaid-block,
+.cm-mermaid-widget {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.mermaid-block svg,
+.cm-mermaid-widget svg {
+  max-width: 100%;
+  height: auto;
+}
+.mermaid-loading,
+.cm-mermaid-widget:not(:has(svg)) {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+.mermaid-error,
+.cm-mermaid-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+.cm-mermaid-widget {
+  cursor: text;
 }

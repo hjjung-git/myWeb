@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { EditorState, EditorSelection, Prec, RangeSetBuilder } from '@codemirror/state'
+import { EditorState, EditorSelection, Prec, RangeSetBuilder, StateField } from '@codemirror/state'
 import { EditorView, Decoration, ViewPlugin, WidgetType, keymap, placeholder as placeholderExt } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { syntaxTree } from '@codemirror/language'
 import { markdown } from '@codemirror/lang-markdown'
 import { resolveImageSrc } from '../lib/api.js'
+import { renderMermaid } from '../lib/mermaid.js'
 
 // Obsidian의 "Live Preview"와 같은 방식 — CodeMirror 6(Obsidian이 실제로 쓰는 에디터 엔진) 위에,
 // 커서가 있는 줄은 markdown 원문(#, **, ` 등)이 그대로 보이고, 커서가 벗어난 줄은 그 기호가
@@ -52,6 +53,71 @@ class ImageWidget extends WidgetType {
     return false
   }
 }
+
+// 커서가 없는 ```mermaid 블록을 통째로 그림으로 바꿔 보여주는 위젯
+class MermaidWidget extends WidgetType {
+  constructor(code) {
+    super()
+    this.code = code
+  }
+
+  eq(other) {
+    return other.code === this.code
+  }
+
+  toDOM() {
+    const wrap = document.createElement('div')
+    wrap.className = 'cm-mermaid-widget'
+    wrap.textContent = '그림 불러오는 중…'
+    renderMermaid(this.code)
+      .then((svg) => {
+        wrap.innerHTML = svg
+      })
+      .catch((err) => {
+        wrap.classList.add('cm-mermaid-error')
+        wrap.textContent = `Mermaid 문법 오류 — 클릭해서 수정: ${err?.message || ''}`
+      })
+    return wrap
+  }
+
+  ignoreEvent() {
+    return false // 그림을 클릭하면 그 위치로 커서가 들어가서 원문 편집으로 돌아간다
+  }
+}
+
+// 여러 줄을 통째로 바꾸는 "블록" 위젯은 ViewPlugin이 아니라 StateField로만 넣을 수 있어서 따로 둔다.
+function buildMermaidDecorations(state) {
+  const sel = state.selection.main
+  const builder = new RangeSetBuilder()
+  syntaxTree(state).iterate({
+    enter(nodeRef) {
+      if (nodeRef.name !== 'FencedCode') return
+      const node = nodeRef.node
+      const info = node.getChild('CodeInfo')
+      const lang = info ? state.sliceDoc(info.from, info.to).trim() : ''
+      if (lang === 'mermaid') {
+        const { from, to } = node
+        const active = sel.from <= to && sel.to >= from
+        const wholeLines = state.doc.lineAt(from).from === from && state.doc.lineAt(to).to === to
+        if (!active && wholeLines) {
+          const textNode = node.getChild('CodeText')
+          const code = textNode ? state.sliceDoc(textNode.from, textNode.to) : ''
+          builder.add(from, to, Decoration.replace({ widget: new MermaidWidget(code), block: true }))
+        }
+      }
+      return false
+    },
+  })
+  return builder.finish()
+}
+
+const mermaidPreviewField = StateField.define({
+  create: buildMermaidDecorations,
+  update(decorations, tr) {
+    return tr.docChanged || tr.selection ? buildMermaidDecorations(tr.state) : decorations
+  },
+  provide: (field) => EditorView.decorations.from(field),
+})
 
 function lineOverlaps(state, pos, sel) {
   const line = state.doc.lineAt(pos)
@@ -383,6 +449,7 @@ function MarkdownLiveEditor({ initialValue, onChange, placeholder: placeholderTe
         markdown(),
         EditorView.lineWrapping,
         livePreviewPlugin,
+        mermaidPreviewField,
         placeholderExt(placeholderText || ''),
         EditorView.domEventHandlers({
           paste(event, view) {
