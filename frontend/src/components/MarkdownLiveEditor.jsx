@@ -3,7 +3,7 @@ import { EditorState, EditorSelection, Prec, RangeSetBuilder, StateField } from 
 import { EditorView, Decoration, ViewPlugin, WidgetType, keymap, placeholder as placeholderExt } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { syntaxTree } from '@codemirror/language'
-import { markdown } from '@codemirror/lang-markdown'
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { resolveImageSrc } from '../lib/api.js'
 import { renderMermaid } from '../lib/mermaid.js'
 
@@ -85,12 +85,115 @@ class MermaidWidget extends WidgetType {
   }
 }
 
-// 여러 줄을 통째로 바꾸는 "블록" 위젯은 ViewPlugin이 아니라 StateField로만 넣을 수 있어서 따로 둔다.
+// ---- 표: 커서가 없으면 markdown 표 원문 대신 실제 표를 보여준다 ----
+// 표의 한 줄을 칸으로 나눈다. \| 는 칸 구분이 아니라 글자 | 로 취급한다.
+function splitTableRow(line) {
+  let s = line.trim()
+  if (s.startsWith('|')) s = s.slice(1)
+  if (s.endsWith('|') && !s.endsWith('\\|')) s = s.slice(0, -1)
+  const cells = []
+  let cur = ''
+  let inCode = false
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]
+    if (ch === '\\' && s[i + 1] === '|') {
+      cur += '|'
+      i++
+      continue
+    }
+    if (ch === '`') inCode = !inCode
+    if (ch === '|' && !inCode) {
+      cells.push(cur.trim())
+      cur = ''
+      continue
+    }
+    cur += ch
+  }
+  cells.push(cur.trim())
+  return cells
+}
+
+// 칸 안의 `코드`와 **굵게**만 간단히 살려서 DOM으로 만든다(나머지는 글자 그대로).
+function appendInline(parent, text) {
+  for (const part of text.split(/(`[^`]+`|\*\*[^*]+\*\*)/)) {
+    if (!part) continue
+    if (part.startsWith('`') && part.endsWith('`') && part.length > 1) {
+      const code = document.createElement('code')
+      code.textContent = part.slice(1, -1)
+      parent.appendChild(code)
+    } else if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      const strong = document.createElement('strong')
+      strong.textContent = part.slice(2, -2)
+      parent.appendChild(strong)
+    } else {
+      parent.appendChild(document.createTextNode(part))
+    }
+  }
+}
+
+class TableWidget extends WidgetType {
+  constructor(source) {
+    super()
+    this.source = source
+  }
+
+  eq(other) {
+    return other.source === this.source
+  }
+
+  toDOM() {
+    const wrap = document.createElement('div')
+    wrap.className = 'cm-table-widget markdown-body'
+    const lines = this.source.split('\n').filter((line) => line.trim())
+    if (lines.length < 2) {
+      wrap.textContent = this.source
+      return wrap
+    }
+    const aligns = splitTableRow(lines[1]).map((cell) => {
+      const left = cell.startsWith(':')
+      const right = cell.endsWith(':')
+      return left && right ? 'center' : right ? 'right' : 'left'
+    })
+    const table = document.createElement('table')
+    const addRow = (parent, line, tag) => {
+      const tr = document.createElement('tr')
+      splitTableRow(line).forEach((text, i) => {
+        const cell = document.createElement(tag)
+        cell.style.textAlign = aligns[i] || 'left'
+        appendInline(cell, text)
+        tr.appendChild(cell)
+      })
+      parent.appendChild(tr)
+    }
+    const thead = document.createElement('thead')
+    addRow(thead, lines[0], 'th')
+    const tbody = document.createElement('tbody')
+    lines.slice(2).forEach((line) => addRow(tbody, line, 'td'))
+    table.append(thead, tbody)
+    wrap.appendChild(table)
+    return wrap
+  }
+
+  ignoreEvent() {
+    return false // 표를 클릭하면 그 위치로 커서가 들어가서 원문 편집으로 돌아간다
+  }
+}
+
+// 여러 줄을 통째로 바꾸는 "블록" 위젯(Mermaid 그림, 표)은 ViewPlugin이 아니라 StateField로만 넣을 수 있어서 따로 둔다.
 function buildMermaidDecorations(state) {
   const sel = state.selection.main
   const builder = new RangeSetBuilder()
   syntaxTree(state).iterate({
     enter(nodeRef) {
+      if (nodeRef.name === 'Table') {
+        const { from, to } = nodeRef.node
+        const active = sel.from <= to && sel.to >= from
+        const wholeLines = state.doc.lineAt(from).from === from && state.doc.lineAt(to).to === to
+        if (!active && wholeLines) {
+          builder.add(from, to, Decoration.replace({ widget: new TableWidget(state.sliceDoc(from, to)), block: true }))
+        }
+        return false
+      }
       if (nodeRef.name !== 'FencedCode') return
       const node = nodeRef.node
       const info = node.getChild('CodeInfo')
@@ -118,6 +221,65 @@ const mermaidPreviewField = StateField.define({
   },
   provide: (field) => EditorView.decorations.from(field),
 })
+
+// 방향키가 표·그림·Mermaid "안으로" 들어가 원문이 펼쳐지면서 화면이 튀는 것을 막는다.
+// 위젯으로 숨겨진 줄은 건너뛰고 그 앞/뒤의 보통 줄로 바로 이동한다. (고치려면 위젯을 클릭하면 원문이 펼쳐진다)
+const IMAGE_ONLY_LINE = /^\s*!\[[^\]]*\]\([^)]*\)\s*$/
+
+function hiddenBlockOnLine(state, line) {
+  const field = state.field(mermaidPreviewField, false)
+  let found = null
+  if (field) {
+    field.between(line.from, line.to, (from, to) => {
+      found = { from, to }
+      return false
+    })
+  }
+  if (found) return found
+  if (IMAGE_ONLY_LINE.test(line.text)) return { from: line.from, to: line.to }
+  return null
+}
+
+// startNo 줄부터 dir 방향으로, 숨겨진 블록이 아닌 첫 줄을 찾는다. 없으면 null.
+function visibleLineFrom(state, startNo, dir) {
+  let no = startNo
+  while (no >= 1 && no <= state.doc.lines) {
+    const line = state.doc.line(no)
+    const hidden = hiddenBlockOnLine(state, line)
+    if (!hidden) return line
+    no = dir > 0 ? state.doc.lineAt(hidden.to).number + 1 : state.doc.lineAt(hidden.from).number - 1
+  }
+  return null
+}
+
+function moveSkippingBlocks(view, dir, horizontal) {
+  const { state } = view
+  const sel = state.selection.main
+  if (!sel.empty) return false
+  const cur = state.doc.lineAt(sel.head)
+  const nextNo = cur.number + dir
+  if (nextNo < 1 || nextNo > state.doc.lines) return false
+  // 가로 이동은 줄 끝/줄 처음에서 줄을 넘어갈 때만 가로챈다.
+  if (horizontal && sel.head !== (dir > 0 ? cur.to : cur.from)) return false
+  // 바로 옆 줄이 보통 줄이면 기본 동작에 맡긴다.
+  if (!hiddenBlockOnLine(state, state.doc.line(nextNo))) return false
+  const target = visibleLineFrom(state, nextNo, dir)
+  if (!target) return false // 문서 끝까지 블록뿐이면 기본 동작
+  let pos
+  if (horizontal) pos = dir > 0 ? target.from : target.to
+  else pos = Math.min(target.from + (sel.head - cur.from), target.to)
+  view.dispatch({ selection: { anchor: pos }, scrollIntoView: true, userEvent: 'select' })
+  return true
+}
+
+const skipBlockKeymap = Prec.highest(
+  keymap.of([
+    { key: 'ArrowUp', run: (view) => moveSkippingBlocks(view, -1, false) },
+    { key: 'ArrowDown', run: (view) => moveSkippingBlocks(view, 1, false) },
+    { key: 'ArrowLeft', run: (view) => moveSkippingBlocks(view, -1, true) },
+    { key: 'ArrowRight', run: (view) => moveSkippingBlocks(view, 1, true) },
+  ]),
+)
 
 function lineOverlaps(state, pos, sel) {
   const line = state.doc.lineAt(pos)
@@ -445,8 +607,10 @@ function MarkdownLiveEditor({ initialValue, onChange, placeholder: placeholderTe
       extensions: [
         history(),
         formatKeymap,
+        skipBlockKeymap,
         keymap.of([indentWithTab, ...defaultKeymap, ...historyKeymap]),
-        markdown(),
+        // markdownLanguage = GFM(표, 취소선 등) 포함 문법 — 표를 표로 인식해야 아래에서 실제 표로 보여줄 수 있다.
+        markdown({ base: markdownLanguage }),
         EditorView.lineWrapping,
         livePreviewPlugin,
         mermaidPreviewField,

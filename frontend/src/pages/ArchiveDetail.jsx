@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkSpacing from '../lib/remarkSpacing.js'
 import { apiGet, apiMutate, resolveImageSrc } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 import { categoryLink } from '../lib/archiveTree.js'
@@ -86,7 +87,7 @@ function ArchiveDetail() {
       <p className="portfolio-period">{post.username} · {formatDate(post.lastModifiedAt)}</p>
       <div className="portfolio-body markdown-body">
         <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
+          remarkPlugins={[remarkGfm, remarkSpacing]}
           components={{
             // 서버에 올린 이미지(/api/images/..)는 배포 환경에서도 열리도록 절대 주소로 바꿔서 보여준다.
             img: ({ src = '', alt = '' }) => <img src={resolveImageSrc(src)} alt={alt} loading="lazy" />,

@@ -1249,3 +1249,18 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 .cm-mermaid-widget {
   cursor: text;
 }
+
+/* ---- 작성 화면: 커서가 없을 때 보여주는 실제 표 ---- */
+.cm-table-widget {
+  margin: 0.4rem 0;
+  overflow-x: auto;
+  cursor: text;
+}
+.cm-table-widget table {
+  margin: 0;
+}
+
+/* ---- 글 화면: 빈 줄을 여러 개 띄운 만큼 추가되는 간격 ---- */
+.md-spacer {
+  height: 1.2em;
+}
