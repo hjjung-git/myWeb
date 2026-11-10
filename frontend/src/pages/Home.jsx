@@ -4,12 +4,13 @@ import { useActiveSection } from '../lib/ActiveSectionContext.jsx'
 import About from './About.jsx'
 import Skills from './Skills.jsx'
 import PortfolioList from './PortfolioList.jsx'
+import Educations from './Educations.jsx'
 import Certifications from './Certifications.jsx'
 import Contact from './Contact.jsx'
 
-// 이력/커리어 흐름(About~Certifications) 뒤에 Contact — 탭 순서(TabNav.jsx)와 동일하게 맞춘다.
+// 이력/커리어 흐름(About~Educations~Certifications) 뒤에 Contact — 탭 순서(TabNav.jsx)와 동일하게 맞춘다.
 // Archive는 홈의 섹션이 아니라 별도 화면(/archive)이다.
-const SECTION_IDS = ['about', 'skills', 'portfolio', 'certifications', 'contact']
+const SECTION_IDS = ['about', 'skills', 'portfolio', 'educations', 'certifications', 'contact']
 
 // 한 페이지 스크롤 홈 — 탭을 누르면 페이지 이동이 아니라 해당 섹션으로 부드럽게 스크롤된다.
 // 지금 보고 있는 섹션은 IntersectionObserver로 추적해 상단 탭 하이라이트에 반영한다.
@@ -47,6 +48,7 @@ function Home() {
       <About />
       <Skills />
       <PortfolioList />
+      <Educations />
       <Certifications />
       <Contact />
     </>

@@ -9,6 +9,7 @@ const TABS = [
   { id: 'about', label: 'About' },
   { id: 'skills', label: 'Skills' },
   { id: 'portfolio', label: 'Career / Projects' },
+  { id: 'educations', label: '교육' },
   { id: 'certifications', label: '어학 / 자격증' },
   { id: 'contact', label: 'Contact' },
 ]
@@ -22,6 +23,7 @@ function TabNav() {
 
   let effectiveActive = activeId
   if (location.pathname.startsWith('/portfolio')) effectiveActive = 'portfolio'
+  else if (location.pathname.startsWith('/educations')) effectiveActive = 'educations'
   else if (location.pathname.startsWith('/certifications')) effectiveActive = 'certifications'
 
   function handleClick(e, id) {
