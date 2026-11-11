@@ -971,74 +971,151 @@ button, .btn-primary, .btn-secondary, .btn-danger {
   margin-bottom: 0.8rem;
   font-weight: 600;
 }
-.tree-node > summary {
+/* 분류 한 줄: [기호] 이름(링크) ........ 접기/펼치기 버튼
+   구분선 대신 앞 기호·글자 크기·굵기·색으로 대/중/소 단계를 구분한다. */
+.tree-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  cursor: pointer;
-  list-style: none;
+  gap: 0.4rem;
 }
-.tree-node > summary::-webkit-details-marker {
-  display: none;
-}
-.tree-node > summary::before {
-  content: "▸";
+.tree-row::before {
+  flex-shrink: 0;
+  width: 0.9em;
+  text-align: center;
+  line-height: 1;
   color: var(--text-faint);
-  font-size: 0.7rem;
-  transition: transform 0.15s;
 }
-.tree-node[open] > summary::before {
-  transform: rotate(90deg);
-}
-.tree-node > summary a {
+.tree-row > a {
   flex: 1;
+  min-width: 0;
+  padding: 0.2rem 0;
+  line-height: 1.35;
 }
-/* 대분류 */
+.tree-toggle {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0.2rem 0.4rem;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-faint);
+  font: inherit;
+  font-size: 0.66rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+}
+.tree-toggle:hover {
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.tree-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+/* 대분류 — ■  크고 굵게, 가장 진한 글자색. 위쪽 여백으로 묶음을 나눈다 */
 .tree-depth-0 {
-  border-top: 1px solid var(--border);
-  padding: 0.55rem 0;
+  margin-top: 1.2rem;
 }
-.tree-depth-0 > summary {
-  font-weight: 600;
+.tree-depth-0 > .tree-row {
+  font-size: 1.1rem;
+  font-weight: 700;
 }
-.tree-depth-0 > summary a {
+.tree-depth-0 > .tree-row::before {
+  content: "■";
+  font-size: 0.5em;
+  color: var(--accent);
+}
+.tree-depth-0 > .tree-row > a {
   color: var(--text);
 }
-/* 중분류 */
+/* 중분류 — –  */
 .tree-depth-1 {
-  margin: 0.4rem 0 0 0.8rem;
+  margin: 0.2rem 0 0 1.2rem;
 }
-.tree-depth-1 > summary {
-  font-size: 0.86rem;
+.tree-depth-1 > .tree-row {
+  font-size: 0.98rem;
   font-weight: 600;
 }
-/* 소분류 */
+.tree-depth-1 > .tree-row > a {
+  color: var(--text);
+}
+.tree-depth-1 > .tree-row::before {
+  content: "–";
+}
+/* 소분류 — ·  */
 .tree-depth-2 {
-  margin: 0.35rem 0 0 1.4rem;
+  margin: 0.1rem 0 0 1.2rem;
 }
-.tree-label {
-  font-size: 0.8rem;
+.tree-depth-2 > .tree-row {
+  font-size: 0.9rem;
   font-weight: 600;
 }
-.tree-count {
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  color: var(--text-faint);
+.tree-depth-2 > .tree-row::before {
+  content: "·";
+  font-size: 1.8em;
+  font-weight: 700;
 }
+.archive-tree a.active {
+  font-weight: 700;
+}
+/* 글 제목 — 기호 없이 가장 작고 얇게. 소분류 기호 아래에서 세로줄이 내려오고, 글은 그 줄 옆에 붙는다 */
 .tree-posts {
   list-style: none;
-  margin: 0.3rem 0 0 0.9rem;
-  padding: 0;
+  margin: 0.15rem 0 0.35rem 0.5rem;
+  padding: 0 0 0 1.4rem;
+  border-left: 2px solid color-mix(in srgb, var(--text-faint) 40%, transparent);
 }
 .tree-posts li a {
   display: block;
-  padding: 0.22rem 0 0.22rem 0.6rem;
-  border-left: 2px solid var(--border);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  font-weight: 400;
   line-height: 1.4;
+  transition: background-color 0.15s, color 0.15s;
+}
+.tree-posts li a:hover {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
 }
 .tree-posts li a.active {
-  border-left-color: var(--accent);
+  position: relative;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+/* 지금 보는 글 자리의 세로줄은 강조색으로 */
+.tree-posts li a.active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(-1.4rem - 2px);
+  width: 2px;
+  background: var(--accent);
+}
+/* 펼칠 때 살짝 떠오르며 나타난다 */
+@keyframes tree-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tree-depth-1,
+.tree-depth-2,
+.tree-posts {
+  animation: tree-in 0.16s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tree-depth-1,
+  .tree-depth-2,
+  .tree-posts {
+    animation: none;
+  }
 }
 
 .archive-breadcrumb {

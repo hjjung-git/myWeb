@@ -96,7 +96,11 @@ public class SecurityConfig
 
                 // 보안 헤더
                 .headers(headers -> headers
-                        .frameOptions(frame -> frame.sameOrigin())         // H2 콘솔 iframe 허용 (same origin만)
+                        // X-Frame-Options는 'same origin'만 가능해서, 프론트(hnjnjng.win)가 백엔드(api.hnjnjng.win)의
+                        // PDF를 <object>로 띄우는 것까지 막아 버린다. 그래서 끄고, 같은 역할을 CSP frame-ancestors로
+                        // 대신한다: 자기 자신(H2 콘솔 iframe 포함)과 프론트 주소에서만 삽입을 허용.
+                        .frameOptions(frame -> frame.disable())
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("frame-ancestors 'self' " + allowedOrigin))
                         .contentTypeOptions(ct -> {})                      // X-Content-Type-Options: nosniff
                         .referrerPolicy(referrer -> referrer
                                 .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN)
