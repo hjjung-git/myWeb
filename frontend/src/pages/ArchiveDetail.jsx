@@ -5,7 +5,6 @@ import remarkGfm from 'remark-gfm'
 import remarkSpacing from '../lib/remarkSpacing.js'
 import { apiGet, apiMutate, resolveImageSrc } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
-import { categoryLink } from '../lib/archiveTree.js'
 import MermaidBlock from '../components/MermaidBlock.jsx'
 
 function formatDate(iso) {
@@ -36,7 +35,7 @@ function ArchiveDetail() {
     try {
       await apiMutate(`/api/posts/${id}`, 'DELETE')
       await reload()
-      navigate(categoryLink(post?.category, post?.subcategory, post?.minorCategory), { state: { restoreScroll: true } })
+      navigate('/archive')
     } catch (err) {
       setError(err.message)
       setDeleting(false)
@@ -49,29 +48,16 @@ function ArchiveDetail() {
   const index = ordered.findIndex((p) => p.id === post.id)
   const prev = index > 0 ? ordered[index - 1] : null
   const next = index >= 0 && index < ordered.length - 1 ? ordered[index + 1] : null
+  // 분류 경로는 글이 어디에 있는지 알려주는 글자일 뿐, 누르면 이동하는 링크가 아니다(분류별 목록 화면은 없다).
+  const crumbs = [post.category, post.category && post.subcategory, post.category && post.subcategory && post.minorCategory].filter(Boolean)
 
   return (
     <article className="portfolio-detail archive-article">
       <p className="archive-breadcrumb">
         <Link to="/archive" state={{ restoreScroll: true }}>Archive</Link>
-        {post.category && (
-          <>
-            {' › '}
-            <Link to={categoryLink(post.category)} state={{ restoreScroll: true }}>{post.category}</Link>
-          </>
-        )}
-        {post.category && post.subcategory && (
-          <>
-            {' › '}
-            <Link to={categoryLink(post.category, post.subcategory)} state={{ restoreScroll: true }}>{post.subcategory}</Link>
-          </>
-        )}
-        {post.category && post.subcategory && post.minorCategory && (
-          <>
-            {' › '}
-            <Link to={categoryLink(post.category, post.subcategory, post.minorCategory)} state={{ restoreScroll: true }}>{post.minorCategory}</Link>
-          </>
-        )}
+        {crumbs.map((name, i) => (
+          <span key={i}>{' › '}{name}</span>
+        ))}
       </p>
 
       {isAdmin && (

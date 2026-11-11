@@ -15,7 +15,7 @@ import CertificationForm from './pages/CertificationForm.jsx'
 import EducationDetail from './pages/EducationDetail.jsx'
 import EducationForm from './pages/EducationForm.jsx'
 import ArchiveLayout from './pages/ArchiveLayout.jsx'
-import ArchiveList from './pages/ArchiveList.jsx'
+import ArchiveHome from './pages/ArchiveHome.jsx'
 import ArchiveDetail from './pages/ArchiveDetail.jsx'
 import ArchiveForm from './pages/ArchiveForm.jsx'
 import './App.css'
@@ -52,9 +52,9 @@ function App() {
                 <Route path="/certifications/new" element={<CertificationForm />} />
                 <Route path="/certifications/:id" element={<CertificationDetail />} />
                 <Route path="/certifications/:id/edit" element={<CertificationForm />} />
-                {/* 목록과 글 보기는 왼쪽 카테고리 트리가 있는 공통 레이아웃 안에서, 작성/수정은 넓은 편집 화면으로 */}
+                {/* 첫 화면과 글 보기는 왼쪽 카테고리 트리가 있는 공통 레이아웃 안에서, 작성/수정은 넓은 편집 화면으로 */}
                 <Route path="/archive" element={<ArchiveLayout />}>
-                  <Route index element={<ArchiveList />} />
+                  <Route index element={<ArchiveHome />} />
                   <Route path=":id" element={<ArchiveDetail />} />
                 </Route>
                 <Route path="/archive/new" element={<ArchiveForm />} />

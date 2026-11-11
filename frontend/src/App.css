@@ -971,12 +971,20 @@ button, .btn-primary, .btn-secondary, .btn-danger {
   margin-bottom: 0.8rem;
   font-weight: 600;
 }
-/* 분류 한 줄: [기호] 이름(링크) ........ 접기/펼치기 버튼
+/* 분류 한 줄: [기호] 이름 ........ ▼  (줄 전체가 하나의 버튼 — 누르면 아래 항목을 열고 닫는다)
    구분선 대신 앞 기호·글자 크기·굵기·색으로 대/중/소 단계를 구분한다. */
 .tree-row {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  width: 100%;
+  padding: 0.2rem 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 .tree-row::before {
   flex-shrink: 0;
@@ -985,40 +993,38 @@ button, .btn-primary, .btn-secondary, .btn-danger {
   line-height: 1;
   color: var(--text-faint);
 }
-.tree-row > a {
+.tree-name {
   flex: 1;
   min-width: 0;
-  padding: 0.2rem 0;
   line-height: 1.35;
 }
-.tree-toggle {
-  display: inline-flex;
-  align-items: center;
+.tree-arrow {
   flex-shrink: 0;
   padding: 0.2rem 0.4rem;
-  border: 0;
   border-radius: 4px;
-  background: none;
   color: var(--text-faint);
-  font: inherit;
   font-size: 0.66rem;
   line-height: 1;
-  cursor: pointer;
   transition: color 0.15s, background-color 0.15s;
 }
-.tree-toggle:hover {
+.tree-row:hover {
+  color: var(--accent-strong);
+}
+.tree-row:hover .tree-arrow {
   color: var(--accent-strong);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
-.tree-toggle:focus-visible {
+.tree-row:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+  border-radius: 4px;
 }
 /* 대분류 — ■  크고 굵게, 가장 진한 글자색. 위쪽 여백으로 묶음을 나눈다 */
 .tree-depth-0 {
   margin-top: 1.2rem;
 }
 .tree-depth-0 > .tree-row {
+  color: var(--text);
   font-size: 1.1rem;
   font-weight: 700;
 }
@@ -1027,19 +1033,14 @@ button, .btn-primary, .btn-secondary, .btn-danger {
   font-size: 0.5em;
   color: var(--accent);
 }
-.tree-depth-0 > .tree-row > a {
-  color: var(--text);
-}
 /* 중분류 — –  */
 .tree-depth-1 {
   margin: 0.2rem 0 0 1.2rem;
 }
 .tree-depth-1 > .tree-row {
+  color: var(--text);
   font-size: 0.98rem;
   font-weight: 600;
-}
-.tree-depth-1 > .tree-row > a {
-  color: var(--text);
 }
 .tree-depth-1 > .tree-row::before {
   content: "–";
@@ -1049,6 +1050,7 @@ button, .btn-primary, .btn-secondary, .btn-danger {
   margin: 0.1rem 0 0 1.2rem;
 }
 .tree-depth-2 > .tree-row {
+  color: var(--text-dim);
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -1056,6 +1058,11 @@ button, .btn-primary, .btn-secondary, .btn-danger {
   content: "·";
   font-size: 1.8em;
   font-weight: 700;
+}
+.tree-depth-0 > .tree-row:hover,
+.tree-depth-1 > .tree-row:hover,
+.tree-depth-2 > .tree-row:hover {
+  color: var(--accent-strong);
 }
 .archive-tree a.active {
   font-weight: 700;
@@ -1116,6 +1123,188 @@ button, .btn-primary, .btn-secondary, .btn-danger {
   .tree-posts {
     animation: none;
   }
+}
+
+/* Archive 홈 — 대표 그림 + 검색창 */
+.archive-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: clamp(2rem, 9vh, 5rem) 0 3rem;
+}
+.archive-mark {
+  width: min(100%, 360px);
+  height: auto;
+  margin-bottom: 2rem;
+  overflow: visible;
+}
+.archive-mark .mark-ground {
+  fill: color-mix(in srgb, var(--text-faint) 14%, transparent);
+}
+.archive-mark .mark-edges path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--text-faint) 55%, transparent);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}
+.archive-mark .mark-leaves circle {
+  fill: color-mix(in srgb, var(--text-faint) 70%, var(--surface));
+}
+.archive-mark .mark-leaves circle.is-lit {
+  fill: var(--accent);
+}
+.archive-mark .mark-l2 circle {
+  fill: var(--surface);
+  stroke: color-mix(in srgb, var(--accent) 65%, transparent);
+  stroke-width: 1.8;
+}
+.archive-mark .mark-l1 circle {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 2.2;
+}
+.archive-mark .mark-root {
+  fill: var(--accent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .archive-mark .mark-edges path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: mark-draw 1.1s ease-out forwards;
+  }
+  .archive-mark .mark-leaves,
+  .archive-mark .mark-l2,
+  .archive-mark .mark-l1 {
+    opacity: 0;
+    animation: mark-fade 0.6s ease-out 0.5s forwards;
+  }
+}
+@keyframes mark-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes mark-fade {
+  to { opacity: 1; }
+}
+
+.home-searchbox {
+  position: relative;
+  width: 100%;
+}
+.home-search-icon {
+  position: absolute;
+  left: 1.1rem;
+  top: 50%;
+  width: 1.15rem;
+  height: 1.15rem;
+  transform: translateY(-50%);
+  fill: none;
+  stroke: var(--text-faint);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.home-search {
+  width: 100%;
+  height: 3.2rem;
+  padding: 0 3.2rem 0 3.1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 6px 22px rgba(20, 30, 25, 0.06);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.home-search::placeholder {
+  color: var(--text-faint);
+}
+.home-search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent), 0 6px 22px rgba(20, 30, 25, 0.06);
+}
+.home-search-hint,
+.home-search-clear {
+  position: absolute;
+  right: 1.05rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.home-search-hint {
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-faint);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  pointer-events: none;
+}
+.home-search-clear {
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-faint) 18%, transparent);
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.home-search-clear:hover {
+  background: color-mix(in srgb, var(--text-faint) 30%, transparent);
+}
+
+.home-results {
+  width: 100%;
+  margin-top: 0.7rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgba(20, 30, 25, 0.07);
+}
+.home-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  color: var(--text);
+  text-decoration: none;
+}
+.home-result.is-active {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.home-result-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.home-result.is-active .home-result-title {
+  color: var(--accent-strong);
+}
+.home-result-path {
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  color: var(--text-faint);
+}
+.home-results-empty,
+.home-results-more {
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+}
+.home-new {
+  margin-top: 1.6rem;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+  text-decoration: none;
+}
+.home-new:hover {
+  color: var(--accent-strong);
 }
 
 .archive-breadcrumb {
