@@ -21,7 +21,6 @@ function Contact() {
           </div>
         </div>
       </div>
-      <p className="contact-note">※ GitHub 주소는 myWeb 저장소의 git 사용자명을 기준으로 추정했습니다 — 다르면 알려주세요.</p>
     </section>
   )
 }
