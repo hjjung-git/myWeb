@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiGet, apiMutate } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
+import { splitTech } from '../lib/portfolioApi.js'
+import MarkdownView from '../components/MarkdownView.jsx'
 
 function PortfolioDetail() {
   const { id } = useParams()
@@ -23,7 +25,7 @@ function PortfolioDetail() {
     setDeleting(true)
     try {
       await apiMutate(`/api/portfolio-items/${id}`, 'DELETE')
-      navigate('/#portfolio', { state: { restoreScroll: true } })
+      navigate('/portfolio')
     } catch (err) {
       setError(err.message)
       setDeleting(false)
@@ -40,14 +42,12 @@ function PortfolioDetail() {
 
   const isExp = item.type === 'EXPERIENCE'
 
-  const techTags = item.techStack
-    ? item.techStack.split(',').map((t) => t.trim()).filter(Boolean)
-    : []
+  const techTags = splitTech(item.techStack)
 
   return (
     <article className="portfolio-detail" style={{ padding: 'clamp(28px, 5vw, 44px) 0' }}>
-      {/* 보던 위치로 돌아간다 (처음 들어온 화면이면 경력/프로젝트 섹션으로) */}
-      <Link to="/#portfolio" state={{ restoreScroll: true }} className="back-link">← 목록으로</Link>
+      {/* 경력/프로젝트 전체 페이지로 돌아간다 (보던 위치 그대로) */}
+      <Link to="/portfolio" state={{ restoreScroll: true }} className="back-link">← 경력 / 프로젝트</Link>
 
       {isAdmin && (
         <div className="detail-toolbar">
@@ -85,20 +85,43 @@ function PortfolioDetail() {
         <>
           <span className="portfolio-type">프로젝트</span>
           <h1>{item.title}</h1>
-          {item.periodText && <p className="portfolio-period">{item.periodText}</p>}
-          {techTags.length > 0 && (
-            <div className="portfolio-tech">
-              {techTags.map((t) => (
-                <span key={t} className="tag">{t}</span>
-              ))}
-            </div>
+          {item.summary && <p className="portfolio-summary">{item.summary}</p>}
+          {(item.periodText || techTags.length > 0 || item.linkUrl) && (
+            <dl className="project-meta">
+              {item.periodText && (
+                <div className="project-meta-row">
+                  <dt>기간</dt>
+                  <dd>{item.periodText}</dd>
+                </div>
+              )}
+              {techTags.length > 0 && (
+                <div className="project-meta-row">
+                  <dt>기술 스택</dt>
+                  <dd>
+                    <span className="portfolio-tech">
+                      {techTags.map((t) => (
+                        <span key={t} className="tag">{t}</span>
+                      ))}
+                    </span>
+                  </dd>
+                </div>
+              )}
+              {item.linkUrl && (
+                <div className="project-meta-row">
+                  <dt>링크</dt>
+                  <dd>
+                    <a href={item.linkUrl} target="_blank" rel="noreferrer" className="portfolio-link-inline">
+                      {item.linkUrl}
+                    </a>
+                  </dd>
+                </div>
+              )}
+            </dl>
           )}
-          <p className="portfolio-summary">{item.summary}</p>
-          {item.detailContent && <div className="portfolio-body">{item.detailContent}</div>}
-          {item.linkUrl && (
-            <a href={item.linkUrl} target="_blank" rel="noreferrer" className="portfolio-link">
-              관련 링크 →
-            </a>
+          {item.detailContent ? (
+            <MarkdownView>{item.detailContent}</MarkdownView>
+          ) : (
+            isAdmin && <p className="status">상세 내용이 비어 있습니다. 수정에서 마크다운으로 채워 보세요.</p>
           )}
         </>
       )}

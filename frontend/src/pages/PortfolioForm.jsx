@@ -3,6 +3,26 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { apiGet, apiMutate } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 
+// 새 프로젝트를 쓸 때 상세 내용에 미리 깔아 주는 섹션 틀 — 마크다운이라서 지우거나 바꿔도 된다.
+const PROJECT_TEMPLATE = `## 개요
+(어떤 프로젝트인지 한두 문장)
+
+## 문제 / 배경
+(왜 필요했는지, 어떤 제약이 있었는지)
+
+## 내가 한 일
+- 
+
+## 구조
+(아키텍처 설명 — 표나 \`\`\`mermaid 다이어그램, 이미지도 쓸 수 있습니다)
+
+## 결과
+- 
+
+## 배운 점
+- 
+`
+
 const EMPTY = {
   type: 'PROJECT',
   title: '',
@@ -31,6 +51,7 @@ function PortfolioForm() {
   const [form, setForm] = useState(() => ({
     ...EMPTY,
     type: searchParams.get('type') === 'EXPERIENCE' ? 'EXPERIENCE' : 'PROJECT',
+    detailContent: !id && searchParams.get('type') !== 'EXPERIENCE' ? PROJECT_TEMPLATE : '',
   }))
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -103,7 +124,19 @@ function PortfolioForm() {
 
       <label>
         유형
-        <select value={form.type} onChange={(e) => update('type', e.target.value)}>
+        <select
+          value={form.type}
+          onChange={(e) => {
+            const type = e.target.value
+            setForm((prev) => {
+              let detailContent = prev.detailContent
+              // 새 항목에서 유형을 바꾸면 깔아 둔 섹션 틀도 같이 맞춘다 (경력에는 틀이 없다).
+              if (!isEdit && type === 'EXPERIENCE' && detailContent === PROJECT_TEMPLATE) detailContent = ''
+              if (!isEdit && type === 'PROJECT' && !detailContent) detailContent = PROJECT_TEMPLATE
+              return { ...prev, type, detailContent }
+            })
+          }}
+        >
           <option value="PROJECT">프로젝트</option>
           <option value="EXPERIENCE">경력</option>
         </select>
@@ -122,9 +155,30 @@ function PortfolioForm() {
       )}
 
       <label>
-        {isExp ? '담당 업무' : '상세 내용'}
-        <textarea value={form.detailContent} onChange={(e) => update('detailContent', e.target.value)} rows={8} />
+        {isExp ? '담당 업무' : '상세 내용 (마크다운)'}
+        <textarea
+          className={isExp ? undefined : 'md-textarea'}
+          value={form.detailContent}
+          onChange={(e) => update('detailContent', e.target.value)}
+          rows={isExp ? 8 : 20}
+        />
       </label>
+      {!isExp && (
+        <div className="form-hint">
+          <span>제목(##)·목록·표·이미지·mermaid 다이어그램을 쓸 수 있습니다.</span>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              if (!form.detailContent.trim() || window.confirm('지금 내용 뒤에 섹션 틀을 덧붙일까요?')) {
+                update('detailContent', form.detailContent ? `${form.detailContent.trimEnd()}\n\n${PROJECT_TEMPLATE}` : PROJECT_TEMPLATE)
+              }
+            }}
+          >
+            섹션 틀 넣기
+          </button>
+        </div>
+      )}
 
       <label>
         {isExp ? '근무 기간' : '기간'}

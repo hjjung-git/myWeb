@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiGet } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
+import SectionHead from '../components/SectionHead.jsx'
+import SectionPage from '../components/SectionPage.jsx'
 
-// 홈 화면의 "어학 / 자격증" 섹션 — 이제 하드코딩이 아니라 /api/certifications에서 받아온다.
+const OVERVIEW_COUNT = 4
+
+// "어학 / 자격증" — 홈에서는 몇 개만(Overview), /certifications 에서는 전체. /api/certifications에서 받아온다.
 // 카드를 클릭하면 각 자격증 상세 페이지(합격확인증 PDF, 합격일자)로 이동한다.
-function Certifications() {
+function Certifications({ full = false }) {
   const { isAdmin } = useAuth()
   const [certs, setCerts] = useState(null)
   const [error, setError] = useState(null)
@@ -16,11 +20,10 @@ function Certifications() {
       .catch((err) => setError(err.message))
   }, [])
 
-  return (
-    <section id="certifications" className="portfolio-section">
-      <p className="eyebrow">Language &amp; Certifications</p>
-      <h2 className="section-title">어학 / 자격증</h2>
+  const shown = full ? certs : certs?.slice(0, OVERVIEW_COUNT)
 
+  const body = (
+    <>
       {isAdmin && (
         <div className="list-toolbar">
           <Link to="/certifications/new" className="btn-primary">
@@ -33,9 +36,9 @@ function Certifications() {
       {!error && certs === null && <p className="status">불러오는 중...</p>}
       {!error && certs?.length === 0 && <p className="status">아직 등록된 어학/자격증이 없습니다.</p>}
 
-      {!error && certs?.length > 0 && (
+      {!error && shown?.length > 0 && (
         <div className="cert-row">
-          {certs.map((cert) => (
+          {shown.map((cert) => (
             <Link key={cert.id} to={`/certifications/${cert.id}`} className="cert-card">
               <div className="mark">{cert.mark}</div>
               <div>
@@ -47,6 +50,20 @@ function Certifications() {
           ))}
         </div>
       )}
+    </>
+  )
+
+  if (full) {
+    return (
+      <SectionPage id="certifications" eyebrow="Language & Certifications" title="어학 / 자격증">
+        {body}
+      </SectionPage>
+    )
+  }
+  return (
+    <section id="certifications" className="portfolio-section">
+      <SectionHead eyebrow="Language & Certifications" title="어학 / 자격증" to="/certifications" />
+      {body}
     </section>
   )
 }
