@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import remarkSpacing from '../lib/remarkSpacing.js'
 import remarkSidenotes from '../lib/remarkSidenotes.js'
 import Sidenote from '../components/Sidenote.jsx'
+import SidenoteLayout from '../components/SidenoteLayout.jsx'
 import { apiGet, apiMutate, resolveImageSrc } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 import MermaidBlock from '../components/MermaidBlock.jsx'
@@ -73,7 +74,8 @@ function ArchiveDetail() {
 
       <h1>{post.title}</h1>
       <p className="portfolio-period">{post.username} · {formatDate(post.lastModifiedAt)}</p>
-      <div className={'portfolio-body markdown-body' + (/^\[\^[^\]]+\]:/m.test(post.content || '') ? ' has-sidenotes' : '')}>
+      <SidenoteLayout enabled={/^\[\^[^\]]+\]:/m.test(post.content || '')}>
+      <div className="portfolio-body markdown-body">
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkSidenotes, remarkSpacing]}
           components={{
@@ -95,6 +97,7 @@ function ArchiveDetail() {
           {post.content}
         </ReactMarkdown>
       </div>
+      </SidenoteLayout>
 
       {(prev || next) && (
         <nav className="archive-pager" aria-label="이전/다음 글">

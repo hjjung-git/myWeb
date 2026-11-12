@@ -1,5 +1,5 @@
 /* 우측 여백 메모(용어 설명) — 본문보다 작고 옅은 이탤릭체. 색은 읽기에 지장 없을 정도로만 낮춘다.
-   - 넓은 화면(1200px 이상): 본문 오른쪽 여백에 메모를 띄운다.
+   - 넓은 화면(1360px 이상): 본문과 분리된 오른쪽 메모 칸에 둔다.
    - 좁은 화면: 번호를 누르면 그 자리에서 펼쳐진다. */
 
 .sn-mark {
@@ -58,31 +58,35 @@
   border-left: 2px solid var(--border);
 }
 
-@media (min-width: 1200px) {
-  /* 메모가 있는 글은 본문 폭을 줄여 오른쪽에 메모 칸을 비워 둔다. 표·코드·그림은 폭을 그대로 쓴다. */
-  .markdown-body.has-sidenotes > :is(p, ul, ol, h1, h2, h3, blockquote) {
-    max-width: calc(100% - 270px);
-  }
-  .markdown-body.has-sidenotes > p:has(> img) {
-    max-width: none;
-    clear: right;
-  }
-  .markdown-body.has-sidenotes > :is(table, pre, hr) {
-    clear: right;
-  }
+/* 넓은 화면: 본문 칸(.sn-main) 옆에 메모 칸(.sn-aside)을 둔다. 메모의 세로 위치는 SidenoteLayout이 정한다. */
+.sn-layout.is-wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  column-gap: 32px;
+  align-items: start;
+}
+.sn-main {
+  min-width: 0;
+}
+.sn-aside {
+  position: relative;
+  align-self: stretch;
+}
+.sn-aside .sidenote {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.sn-layout.is-wide .sn-mark {
+  cursor: default;
+  pointer-events: none;
+}
 
-  .sidenote,
-  .sidenote.is-open {
-    display: block;
-    float: right;
-    clear: right;
-    width: 230px;
-    margin: 0.15rem -270px 0 0;
-    padding: 0;
-    border: 0;
-  }
-  .sn-mark {
-    cursor: default;
-    pointer-events: none;
-  }
+/* Archive 글 화면: 메모 칸이 생기면 글 칸을 메모 칸 폭만큼 넓혀서 본문 폭(최대 820px)을 지킨다. */
+.archive-layout:has(.sn-layout.is-wide) {
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1072px);
 }
