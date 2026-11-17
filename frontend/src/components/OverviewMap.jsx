@@ -10,14 +10,14 @@ import { fetchProjectsWithTech, postsAbout, projectsUsing, splitTech } from '../
 //  · 기술 그룹 ─ 프로젝트: 프로젝트 기술 스택에 그 그룹의 기술이 있을 때
 //  · 프로젝트·경력 ─ 분류: 그 분류의 글이 '관련 프로젝트'로 그 항목을 골랐을 때
 //  · 기술 그룹 ─ 분류: 그 분류의 글이 그 그룹의 기술과 이어졌을 때(관련 기술 또는 제목·분류 이름 일치)
-const W = 1000
-const ROW = 58
-const TOP = 52
-const NODE_H = 38
+const W = 1100
+const ROW = 76
+const TOP = 64
+const NODE_H = 50
 const COLS = {
-  skill: { x: 20, w: 232, label: 'SKILLS' },
-  item: { x: 384, w: 232, label: 'CAREER · PROJECTS' },
-  cat: { x: 748, w: 232, label: 'ARCHIVE' },
+  skill: { x: 16, w: 280, label: 'SKILLS' },
+  item: { x: 410, w: 280, label: 'CAREER · PROJECTS' },
+  cat: { x: 804, w: 280, label: 'ARCHIVE' },
 }
 const MAX_CATS = 8
 
@@ -97,7 +97,7 @@ function OverviewMap() {
           <div className="overview-scroll">
             <svg viewBox={`0 0 ${W} ${model.height}`} role="group" aria-label="기술, 경력·프로젝트, Archive 분류의 연결 관계">
               {Object.values(COLS).map((c) => (
-                <text key={c.label} className="om-head" x={c.x + c.w / 2} y="24" textAnchor="middle">{c.label}</text>
+                <text key={c.label} className="om-head" x={c.x + c.w / 2} y="28" textAnchor="middle">{c.label}</text>
               ))}
               <g>
                 {model.edges.map((e, i) => {
@@ -115,21 +115,21 @@ function OverviewMap() {
               {model.groups.map((g) => (
                 <g key={g.id} className="om-node om-skill" tabIndex={0} role="link" onClick={() => navigate('/skills')} onKeyDown={(ev) => ev.key === 'Enter' && navigate('/skills')}>
                   <rect x={COLS.skill.x} y={model.y.skill.get(g.id) - NODE_H / 2} width={COLS.skill.w} height={NODE_H} rx={NODE_H / 2} />
-                  <text x={COLS.skill.x + COLS.skill.w / 2} y={model.y.skill.get(g.id) + 4.5} textAnchor="middle">{clip(g.name, 22)}</text>
+                  <text x={COLS.skill.x + COLS.skill.w / 2} y={model.y.skill.get(g.id) + 5.5} textAnchor="middle">{clip(g.name, 26)}</text>
                 </g>
               ))}
               {model.items.map((it) => (
                 <g key={it.id} className={`om-node om-item om-${it.kind.toLowerCase()}`} tabIndex={0} role="link" onClick={() => navigate(`/portfolio/${it.id}`)} onKeyDown={(ev) => ev.key === 'Enter' && navigate(`/portfolio/${it.id}`)}>
                   <title>{it.title}</title>
-                  <rect x={COLS.item.x} y={model.y.item.get(it.id) - NODE_H / 2} width={COLS.item.w} height={NODE_H} rx="9" />
-                  <text x={COLS.item.x + COLS.item.w / 2} y={model.y.item.get(it.id) + 4.5} textAnchor="middle">{clip(it.title, 24)}</text>
+                  <rect x={COLS.item.x} y={model.y.item.get(it.id) - NODE_H / 2} width={COLS.item.w} height={NODE_H} rx="11" />
+                  <text x={COLS.item.x + COLS.item.w / 2} y={model.y.item.get(it.id) + 5.5} textAnchor="middle">{clip(it.title, 28)}</text>
                 </g>
               ))}
               {model.cats.map((c) => (
                 <g key={c.id} className="om-node om-cat" tabIndex={0} role="link" onClick={() => navigate('/archive')} onKeyDown={(ev) => ev.key === 'Enter' && navigate('/archive')}>
                   <rect x={COLS.cat.x} y={model.y.cat.get(c.id) - NODE_H / 2} width={COLS.cat.w} height={NODE_H} rx="9" />
-                  <text x={COLS.cat.x + 16} y={model.y.cat.get(c.id) + 4.5}>{clip(c.name, 16)}</text>
-                  <text className="om-count" x={COLS.cat.x + COLS.cat.w - 16} y={model.y.cat.get(c.id) + 4.5} textAnchor="end">{c.posts.length}</text>
+                  <text x={COLS.cat.x + 20} y={model.y.cat.get(c.id) + 5.5}>{clip(c.name, 18)}</text>
+                  <text className="om-count" x={COLS.cat.x + COLS.cat.w - 20} y={model.y.cat.get(c.id) + 5.5} textAnchor="end">{c.posts.length}</text>
                 </g>
               ))}
             </svg>

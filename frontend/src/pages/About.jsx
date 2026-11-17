@@ -1,8 +1,8 @@
 // 소개(About) — 홈 맨 위의 메인 카드, 그리고 /about 전용 페이지(전체 소개).
 import { Link } from 'react-router-dom'
 import SectionPage from '../components/SectionPage.jsx'
-import SectionHead from '../components/SectionHead.jsx'
 import HeroGraph from '../components/HeroGraph.jsx'
+import SectionHead from '../components/SectionHead.jsx'
 
 // 카드와 전용 페이지가 같이 쓰는 핵심 사실
 const FACTS = [
@@ -12,10 +12,43 @@ const FACTS = [
   { label: '자격', value: 'SQLD · 정보처리기사 · 리눅스마스터 2급' },
 ]
 
-function Facts() {
+// 인적사항 — 항목을 더 넣고 싶으면 여기에만 추가하면 된다.
+const PROFILE = [
+  { label: '이름', value: '정현진' },
+  { label: '학력', value: '금오공과대학교 컴퓨터공학 · 2027.02 졸업예정' },
+  { label: '이메일', value: 'jaeroj9@gmail.com', href: 'mailto:jaeroj9@gmail.com' },
+  { label: '연락처', value: '010-9285-1019', href: 'tel:+821092851019' },
+  { label: 'GitHub', value: 'github.com/hjjung-git', href: 'https://github.com/hjjung-git' },
+]
+
+function ProfileCard() {
+  return (
+    <div className="about-profile">
+      <p className="about-name">정현진</p>
+      <p className="about-role">Forward Deployed Engineer 지향 · Data &amp; Backend</p>
+      <dl className="profile-list">
+        {PROFILE.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd>
+              {row.href ? (
+                <a href={row.href} target={row.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">{row.value}</a>
+              ) : (
+                row.value
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  )
+}
+
+// skip: 인적사항에 이미 있는 항목은 빼고 보여줄 때 쓴다
+function Facts({ skip = [] }) {
   return (
     <dl className="hero-facts">
-      {FACTS.map((fact) => (
+      {FACTS.filter((fact) => !skip.includes(fact.label)).map((fact) => (
         <div key={fact.label} className="hero-fact">
           <dt>{fact.label}</dt>
           <dd>{fact.value}</dd>
@@ -29,7 +62,8 @@ function About({ full = false }) {
   if (full) {
     return (
       <SectionPage id="about" eyebrow="About" title="소개">
-        <Facts />
+        <ProfileCard />
+        <Facts skip={['학력']} />
         <div className="about-text">
           <p className="lede">
             금오공과대학교에서 컴퓨터공학을 전공하며 2027년 2월 졸업을 앞두고 있습니다. AWS RDS MySQL 환경에서
@@ -84,12 +118,17 @@ function About({ full = false }) {
 
       <section id="intro" className="portfolio-section about-intro">
         <SectionHead eyebrow="About" title="소개" to="/about" linkLabel="소개 더 보기 →" />
-        <Facts />
-        <p className="lede">
-          금오공과대학교에서 컴퓨터공학을 전공하며 2027년 2월 졸업을 앞두고 있습니다. AWS RDS MySQL 환경에서
-          배포, 보안 설정, 백업/복구, CI/CD 파이프라인 구성까지 데이터베이스 운영의 실제 흐름을 다뤄본 경험이
-          있고, 최근에는 그 기반을 Neo4j와 온톨로지 기반 지식그래프로 확장하고 있습니다.
-        </p>
+        <div className="about-grid">
+          <ProfileCard />
+          <div className="about-statement">
+            <p className="about-statement-text">
+              금오공과대학교에서 컴퓨터공학을 전공하며 2027년 2월 졸업을 앞두고 있습니다. AWS RDS MySQL 환경에서
+              배포, 보안 설정, 백업/복구, CI/CD 파이프라인 구성까지 데이터베이스 운영의 실제 흐름을 다뤄본 경험이
+              있고, 최근에는 그 기반을 Neo4j와 온톨로지 기반 지식그래프로 확장하고 있습니다.
+            </p>
+            <Facts skip={['학력']} />
+          </div>
+        </div>
       </section>
     </div>
   )

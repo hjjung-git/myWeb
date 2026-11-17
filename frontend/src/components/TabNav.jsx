@@ -15,7 +15,8 @@ function TabNav() {
   const navRef = useRef(null)
   const [bar, setBar] = useState(null)
 
-  const isArchive = location.pathname.startsWith('/archive')
+  // 섹션 탭은 Portfolio 영역에서만 — Archive·Codebase에서는 숨긴다
+  const isArchive = /^\/(archive|codebase)/.test(location.pathname)
   const effectiveActive = activeSectionFor(location.pathname, activeId)
 
   useLayoutEffect(() => {

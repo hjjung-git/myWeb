@@ -13,9 +13,23 @@ export async function fetchProjectsWithTech() {
     list.map(async (project) => {
       try {
         const detail = await apiGet(`/api/portfolio-items/${project.id}`)
-        return { ...project, techStack: detail.techStack ?? '' }
+        return { ...project, techStack: detail.techStack ?? '', linkUrl: detail.linkUrl ?? '' }
       } catch {
-        return { ...project, techStack: '' }
+        return { ...project, techStack: '', linkUrl: '' }
+      }
+    }),
+  )
+}
+
+// 경력 카드는 상세 정보(고용형태·부서·직급·담당 업무)를 바로 보여줘서 항목별 상세를 한 번씩 더 받는다.
+export async function fetchExperienceWithDetail() {
+  const list = await apiGet('/api/portfolio-items?type=EXPERIENCE')
+  return Promise.all(
+    list.map(async (item) => {
+      try {
+        return { ...item, ...(await apiGet(`/api/portfolio-items/${item.id}`)) }
+      } catch {
+        return item
       }
     }),
   )

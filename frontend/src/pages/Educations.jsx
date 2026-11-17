@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiGet } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
-import SectionHead from '../components/SectionHead.jsx'
 import SectionPage from '../components/SectionPage.jsx'
+import SectionHead from '../components/SectionHead.jsx'
 
-const OVERVIEW_COUNT = 3
+const OVERVIEW_COUNT = 6
 
 // "교육" — 홈에서는 최근 몇 개(Overview), /educations 에서는 전체. 수료한 교육을 /api/educations에서 받아와
 // 타임라인(기간 + 교육명 + 기관)으로 보여준다. 항목을 클릭하면 상세 페이지(배운 내용, 프로젝트 링크, 수료증 PDF)로 이동한다.
@@ -36,7 +36,20 @@ function Educations({ full = false }) {
       {!error && items === null && <p className="status">불러오는 중...</p>}
       {!error && items?.length === 0 && <p className="status">아직 등록된 교육이 없습니다.</p>}
 
-      {!error && shown?.length > 0 && (
+      {/* 홈은 가로로 간단한 카드, 전용 페이지는 타임라인 */}
+      {!error && shown?.length > 0 && !full && (
+        <div className="strip-grid">
+          {shown.map((item) => (
+            <Link key={item.id} to={`/educations/${item.id}`} className="strip-card">
+              <span className="sc-period">{item.periodText || ' '}</span>
+              <strong>{item.name}</strong>
+              {item.institution && <span className="sc-sub">{item.institution}</span>}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {!error && shown?.length > 0 && full && (
         <div className="timeline">
           {shown.map((item) => (
             <div key={item.id} className="tl-item">

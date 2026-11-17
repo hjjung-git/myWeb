@@ -32,7 +32,7 @@ function FloatingNav() {
     }
   }, [open])
 
-  if (pathname.startsWith('/archive')) return null
+  if (/^\/(archive|codebase)/.test(pathname)) return null
 
   const active = activeSectionFor(pathname, activeId)
 

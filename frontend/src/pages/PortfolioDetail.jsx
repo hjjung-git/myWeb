@@ -6,6 +6,9 @@ import { splitTech } from '../lib/portfolioApi.js'
 import MarkdownView from '../components/MarkdownView.jsx'
 import BackButton from '../components/BackButton.jsx'
 import RelatedPosts from '../components/RelatedPosts.jsx'
+import RelatedSnippets from '../components/RelatedSnippets.jsx'
+import LanguageBar from '../components/LanguageBar.jsx'
+import { resolveImageSrc } from '../lib/api.js'
 import { useActiveSection } from '../lib/ActiveSectionContext.jsx'
 
 function PortfolioDetail() {
@@ -94,19 +97,39 @@ function PortfolioDetail() {
         </>
       ) : (
         <>
-          <span className="portfolio-type">프로젝트</span>
-          <h1>{item.title}</h1>
-          {item.summary && <p className="portfolio-summary">{item.summary}</p>}
+          <header className="proj-hero">
+            {item.thumbnailPath && (
+              <img className="proj-hero-thumb" src={resolveImageSrc(item.thumbnailPath)} alt="" />
+            )}
+            <div className="proj-hero-info">
+              <span className="portfolio-type">프로젝트</span>
+              <h1>{item.title}</h1>
+              {item.summary && <p className="portfolio-summary">{item.summary}</p>}
+              <LanguageBar url={item.linkUrl} legend={6} />
+            </div>
+          </header>
+
+          {/* 명세 — README처럼 길게 늘어놓지 않고 항목별 칸으로 */}
           {(item.periodText || techTags.length > 0 || item.linkUrl) && (
-            <dl className="project-meta">
+            <dl className="spec-grid">
               {item.periodText && (
-                <div className="project-meta-row">
+                <div className="spec-cell">
                   <dt>기간</dt>
                   <dd>{item.periodText}</dd>
                 </div>
               )}
+              {item.linkUrl && (
+                <div className="spec-cell">
+                  <dt>저장소 / 링크</dt>
+                  <dd>
+                    <a href={item.linkUrl} target="_blank" rel="noreferrer" className="portfolio-link-inline">
+                      {item.linkUrl.replace(/^https?:\/\//, '')}
+                    </a>
+                  </dd>
+                </div>
+              )}
               {techTags.length > 0 && (
-                <div className="project-meta-row">
+                <div className="spec-cell spec-wide">
                   <dt>기술 스택</dt>
                   <dd>
                     <span className="portfolio-tech">
@@ -114,16 +137,6 @@ function PortfolioDetail() {
                         <span key={t} className="tag">{t}</span>
                       ))}
                     </span>
-                  </dd>
-                </div>
-              )}
-              {item.linkUrl && (
-                <div className="project-meta-row">
-                  <dt>링크</dt>
-                  <dd>
-                    <a href={item.linkUrl} target="_blank" rel="noreferrer" className="portfolio-link-inline">
-                      {item.linkUrl}
-                    </a>
                   </dd>
                 </div>
               )}
@@ -138,6 +151,7 @@ function PortfolioDetail() {
       )}
 
       <RelatedPosts projectId={id} />
+      <RelatedSnippets projectId={id} />
     </article>
   )
 }

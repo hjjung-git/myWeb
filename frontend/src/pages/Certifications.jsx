@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiGet } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
-import SectionHead from '../components/SectionHead.jsx'
 import SectionPage from '../components/SectionPage.jsx'
+import SectionHead from '../components/SectionHead.jsx'
 
-const OVERVIEW_COUNT = 4
+const OVERVIEW_COUNT = 8
 
 // "어학 / 자격증" — 홈에서는 몇 개만(Overview), /certifications 에서는 전체. /api/certifications에서 받아온다.
 // 카드를 클릭하면 각 자격증 상세 페이지(합격확인증 PDF, 합격일자)로 이동한다.

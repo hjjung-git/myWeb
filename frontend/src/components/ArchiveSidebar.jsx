@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, NavLink, matchPath, useLocation } from 'react-router-dom'
+import { NavLink, matchPath, useLocation } from 'react-router-dom'
 
 // 펼쳐 둔 분류를 브라우저에 기억한다 (이 기기에서만 쓰는 편의 기능이라 실패해도 그냥 넘어간다).
 const STORAGE_KEY = 'archive-tree-open'
@@ -63,18 +63,32 @@ function TreeNode({ node, depth, openKeys, onToggle }) {
 }
 
 // Archive 왼쪽 사이드바 — 대분류 > 중분류 > 소분류 > 글 제목 트리.
-// 모바일에서는 기본으로 접혀 있고 "카테고리" 버튼으로 연다.
+// 창이 좁으면(≤1080px) 화면 왼쪽 밖으로 접혀 있고, 왼쪽 가장자리 탭에 마우스를 올리거나 누르면(터치 포함) 펼쳐진다.
+//  · 올려서 연 것은 마우스가 벗어나면 닫히고, 눌러서 연 것(펼친 목록 안을 누른 것 포함)은 바깥을 누르거나 Esc·글 이동 때 닫힌다.
 function ArchiveSidebar({ tree, loading, error }) {
   const location = useLocation()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [pinned, setPinned] = useState(false) // 눌러서 연 상태 — 마우스가 벗어나도 유지
   const [openKeys, setOpenKeys] = useState(loadOpenKeys)
 
-  // 다른 글로 이동하면 모바일 메뉴는 닫는다.
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [location.pathname])
+  const close = useCallback(() => {
+    setOpen(false)
+    setPinned(false)
+  }, [])
 
-  const onHome = location.pathname === '/archive'
+  // 다른 글로 이동하면 접는다.
+  useEffect(() => {
+    close()
+  }, [location.pathname, close])
+
+  useEffect(() => {
+    if (!open) return undefined
+    const onKey = (e) => e.key === 'Escape' && close()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, close])
+
+  const hoverCapable = () => typeof window.matchMedia === 'function' && window.matchMedia('(hover: hover)').matches
 
   // 글 상세 화면이면 그 글이 속한 분류 경로를 찾아 둔다.
   const postPaths = useMemo(() => {
@@ -117,29 +131,36 @@ function ArchiveSidebar({ tree, loading, error }) {
   }, [])
 
   return (
-    <aside className={`archive-sidebar${mobileOpen ? ' is-open' : ''}`}>
+    <>
       <button
         type="button"
-        className="archive-sidebar-toggle btn-secondary"
-        onClick={() => setMobileOpen((open) => !open)}
-        aria-expanded={mobileOpen}
+        className={`archive-edge-tab${open ? ' is-hidden' : ''}`}
+        aria-label="카테고리 열기"
+        aria-expanded={open}
+        aria-controls="archive-drawer"
+        onMouseEnter={() => hoverCapable() && setOpen(true)}
+        onClick={() => {
+          setOpen(true)
+          setPinned(true)
+        }}
       >
-        카테고리 {mobileOpen ? '닫기 ▲' : '열기 ▼'}
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M9 5l7 7-7 7" />
+        </svg>
       </button>
+      {open && <div className="archive-scrim" onClick={close} aria-hidden="true" />}
 
-      <nav className="archive-tree" aria-label="Archive 카테고리">
-        <Link to="/archive" className={`tree-all${onHome ? ' active' : ''}`}>
-          Archive 홈
-        </Link>
+      <aside id="archive-drawer" className={`archive-sidebar${open ? ' is-open' : ''}`} onMouseLeave={() => !pinned && setOpen(false)} onClick={() => setPinned(true)}>
+        <nav className="archive-tree" aria-label="Archive 카테고리">
+          {error && <p className="status status-error">분류를 불러오지 못했습니다.</p>}
+          {!error && loading && <p className="status">불러오는 중...</p>}
 
-        {error && <p className="status status-error">분류를 불러오지 못했습니다.</p>}
-        {!error && loading && <p className="status">불러오는 중...</p>}
-
-        {tree.map((node) => (
-          <TreeNode key={node.name} node={node} depth={0} openKeys={openKeys} onToggle={toggle} />
-        ))}
-      </nav>
-    </aside>
+          {tree.map((node) => (
+            <TreeNode key={node.name} node={node} depth={0} openKeys={openKeys} onToggle={toggle} />
+          ))}
+        </nav>
+      </aside>
+    </>
   )
 }
 

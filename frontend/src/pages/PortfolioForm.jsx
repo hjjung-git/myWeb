@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { apiGet, apiMutate } from '../lib/api.js'
+import { apiGet, apiMutate, apiUpload, resolveImageSrc } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 
 // 새 프로젝트를 쓸 때 상세 내용에 미리 깔아 주는 섹션 틀 — 마크다운이라서 지우거나 바꿔도 된다.
@@ -231,13 +231,36 @@ function PortfolioForm() {
 
           <label>
             관련 링크
-            <input value={form.linkUrl} onChange={(e) => update('linkUrl', e.target.value)} placeholder="https://..." />
+            <input value={form.linkUrl} onChange={(e) => update('linkUrl', e.target.value)} placeholder="https://github.com/아이디/저장소 — 이 주소로 언어 비율을 자동 계산해요" />
           </label>
 
-          <label>
-            썸네일 경로
-            <input value={form.thumbnailPath} onChange={(e) => update('thumbnailPath', e.target.value)} />
-          </label>
+          <div className="form-field">
+            썸네일 (프로젝트 카드·상세 맨 위에 보여요)
+            {form.thumbnailPath && (
+              <img className="thumb-preview" src={resolveImageSrc(form.thumbnailPath)} alt="썸네일 미리보기" />
+            )}
+            <div className="thumb-actions">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  try {
+                    const fd = new FormData()
+                    fd.append('file', file)
+                    const saved = await apiUpload('/api/images', 'POST', fd)
+                    update('thumbnailPath', saved.url)
+                  } catch (err) {
+                    setError(`썸네일 업로드 실패: ${err.message}`)
+                  }
+                }}
+              />
+              {form.thumbnailPath && (
+                <button type="button" className="btn-secondary" onClick={() => update('thumbnailPath', '')}>썸네일 제거</button>
+              )}
+            </div>
+          </div>
         </>
       )}
 

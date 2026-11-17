@@ -7,6 +7,7 @@ import SettingsMenu from './components/SettingsMenu.jsx'
 import FloatingNav from './components/FloatingNav.jsx'
 import TabNav from './components/TabNav.jsx'
 import SiteSwitch from './components/SiteSwitch.jsx'
+import AreaLogo from './components/AreaLogo.jsx'
 import SiteFooter from './components/SiteFooter.jsx'
 import ScrollManager from './components/ScrollManager.jsx'
 import Home from './pages/Home.jsx'
@@ -25,6 +26,9 @@ import ArchiveLayout from './pages/ArchiveLayout.jsx'
 import ArchiveHome from './pages/ArchiveHome.jsx'
 import ArchiveDetail from './pages/ArchiveDetail.jsx'
 import ArchiveForm from './pages/ArchiveForm.jsx'
+import CodebaseHome from './pages/CodebaseHome.jsx'
+import CodebaseDetail from './pages/CodebaseDetail.jsx'
+import CodebaseForm from './pages/CodebaseForm.jsx'
 import './App.css'
 
 // 주소의 깊이 — "/"=0, "/archive"·"/portfolio"=1, "/portfolio/3"·"/archive/new"=2 …
@@ -67,16 +71,20 @@ function App() {
     }
   }, [])
 
+  const areaName = location.pathname.startsWith('/archive') ? 'archive' : location.pathname.startsWith('/codebase') ? 'codebase' : null
+
   return (
     <ThemeProvider>
       <AuthProvider>
         <ActiveSectionProvider>
           <ScrollManager />
-          <div className="site">
+          <div className="site" data-home={location.pathname === '/' ? '' : undefined}>
             <header className="site-header">
               <div className="header-left">
                 <Link to="/" className="brand">myWeb</Link>
                 <SiteSwitch />
+                {/* Archive·Codebase에서는 같은 자리(헤더)에 그 영역 홈으로 가는 로고 */}
+                {areaName && <AreaLogo area={areaName} />}
               </div>
               <TabNav />
               <div className="header-actions">
@@ -84,7 +92,7 @@ function App() {
               </div>
             </header>
 
-            <main className="site-main">
+            <main className={`site-main${location.pathname === '/' || location.pathname.startsWith('/codebase') ? ' site-main--home' : ''}`}>
               <Routes>
                 <Route path="/" element={<Home />} />
                 {/* 영역별 전용 페이지 — 홈은 각 영역의 Overview, 자세한 내용은 여기 */}
@@ -109,6 +117,11 @@ function App() {
                 </Route>
                 <Route path="/archive/new" element={<ArchiveForm />} />
                 <Route path="/archive/:id/edit" element={<ArchiveForm />} />
+                {/* Codebase — 코드 저장소 */}
+                <Route path="/codebase" element={<CodebaseHome />} />
+                <Route path="/codebase/new" element={<CodebaseForm />} />
+                <Route path="/codebase/:id" element={<CodebaseDetail />} />
+                <Route path="/codebase/:id/edit" element={<CodebaseForm />} />
               </Routes>
             </main>
             <SiteFooter />

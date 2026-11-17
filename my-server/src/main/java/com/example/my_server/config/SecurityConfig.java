@@ -80,6 +80,11 @@ public class SecurityConfig
                         .requestMatchers(HttpMethod.POST, "/api/educations/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/educations/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/educations/**").hasRole("ADMIN")
+                        // 기술 레벨·Codebase: 조회(GET)는 누구나, 저장/수정/삭제는 관리자만
+                        .requestMatchers(HttpMethod.PUT, "/api/skill-levels/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/snippets/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/snippets/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/snippets/**").hasRole("ADMIN")
                         // Archive 글 이미지: 업로드는 관리자만, 조회(GET)는 누구나
                         .requestMatchers(HttpMethod.POST, "/api/images/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/images/**").hasRole("ADMIN")
