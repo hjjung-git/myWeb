@@ -5,7 +5,6 @@ export const SECTIONS = [
   { id: 'portfolio', label: 'Career / Projects' },
   { id: 'educations', label: '교육' },
   { id: 'certifications', label: '어학 / 자격증' },
-  { id: 'contact', label: 'Contact' },
 ]
 
 // 지금 어느 섹션을 보는 중인가 — 홈에서는 스크롤 위치(activeId), 영역별 전용/상세 페이지에서는 그 페이지의 영역.

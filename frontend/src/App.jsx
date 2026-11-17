@@ -7,6 +7,7 @@ import SettingsMenu from './components/SettingsMenu.jsx'
 import FloatingNav from './components/FloatingNav.jsx'
 import TabNav from './components/TabNav.jsx'
 import SiteSwitch from './components/SiteSwitch.jsx'
+import SiteFooter from './components/SiteFooter.jsx'
 import ScrollManager from './components/ScrollManager.jsx'
 import Home from './pages/Home.jsx'
 import About from './pages/About.jsx'
@@ -82,6 +83,7 @@ function App() {
                 <Route path="/archive/:id/edit" element={<ArchiveForm />} />
               </Routes>
             </main>
+            <SiteFooter />
             <FloatingNav />
           </div>
         </ActiveSectionProvider>

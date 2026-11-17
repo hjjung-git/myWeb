@@ -9,7 +9,7 @@ import { SECTIONS, activeSectionFor } from '../lib/sections.js'
 function TabNav() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { activeId } = useActiveSection()
+  const { activeId, pinActive } = useActiveSection()
 
   if (location.pathname.startsWith('/archive')) return null
 
@@ -17,6 +17,7 @@ function TabNav() {
 
   function handleClick(e, id) {
     e.preventDefault()
+    pinActive(id)
     if (location.pathname === '/') {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
     } else {

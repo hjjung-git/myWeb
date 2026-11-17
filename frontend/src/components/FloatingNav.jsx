@@ -8,7 +8,7 @@ import { SECTIONS, activeSectionFor } from '../lib/sections.js'
 function FloatingNav() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const { activeId } = useActiveSection()
+  const { activeId, pinActive } = useActiveSection()
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
 
@@ -38,6 +38,7 @@ function FloatingNav() {
 
   function go(id) {
     setOpen(false)
+    pinActive(id)
     if (pathname === '/') {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
     } else {

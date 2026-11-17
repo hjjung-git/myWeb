@@ -638,7 +638,7 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 }
 
 /* 스티키 헤더에 섹션 상단이 가려지지 않도록 앵커 이동 시 여유를 둔다 */
-#about, #skills, #portfolio, #certifications, #archive, #contact {
+#about, #skills, #portfolio, #educations, #certifications, #archive {
   scroll-margin-top: 96px;
 }
 
@@ -1168,18 +1168,18 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 .archive-mark .mark-root {
   fill: var(--accent);
 }
-@media (prefers-reduced-motion: no-preference) {
-  .archive-mark .mark-edges path {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: mark-draw 1.1s ease-out forwards;
-  }
-  .archive-mark .mark-leaves,
-  .archive-mark .mark-l2,
-  .archive-mark .mark-l1 {
-    opacity: 0;
-    animation: mark-fade 0.6s ease-out 0.5s forwards;
-  }
+/* 움직임은 설정의 "움직임 줄이기"(html[data-reduce-motion])가 정한다.
+   기본값은 OS의 "동작 줄이기"를 따르지만, 설정에서 끄면 OS가 줄이기여도 움직인다. */
+html:not([data-reduce-motion]) .archive-mark .mark-edges path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: mark-draw 1.1s ease-out forwards;
+}
+html:not([data-reduce-motion]) .archive-mark .mark-leaves,
+html:not([data-reduce-motion]) .archive-mark .mark-l2,
+html:not([data-reduce-motion]) .archive-mark .mark-l1 {
+  opacity: 0;
+  animation: mark-fade 0.6s ease-out 0.5s forwards;
 }
 @keyframes mark-draw {
   to { stroke-dashoffset: 0; }
@@ -1928,18 +1928,16 @@ button.tag-button.is-selected .tag-count {
   font-weight: 800;
   letter-spacing: 0.02em;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .hg-node,
-  .hg-sat {
-    animation: hg-float 7s ease-in-out infinite alternate;
-  }
-  .hg-flow {
-    animation: hg-dash 9s linear infinite;
-  }
-  .hg-core-halo {
-    transform-origin: 260px 260px;
-    animation: hg-pulse 4.5s ease-in-out infinite;
-  }
+html:not([data-reduce-motion]) .hg-node,
+html:not([data-reduce-motion]) .hg-sat {
+  animation: hg-float 7s ease-in-out infinite alternate;
+}
+html:not([data-reduce-motion]) .hg-flow {
+  animation: hg-dash 9s linear infinite;
+}
+html:not([data-reduce-motion]) .hg-core-halo {
+  transform-origin: 260px 260px;
+  animation: hg-pulse 4.5s ease-in-out infinite;
 }
 @keyframes hg-float {
   from { transform: translateY(-3px); }
@@ -1978,11 +1976,9 @@ button.tag-button.is-selected .tag-count {
   height: 1.8rem;
   background: linear-gradient(var(--text-faint), transparent);
 }
-@media (prefers-reduced-motion: no-preference) {
-  .hero-scroll i {
-    animation: scroll-cue 1.8s ease-in-out infinite;
-    transform-origin: top;
-  }
+html:not([data-reduce-motion]) .hero-scroll i {
+  animation: scroll-cue 1.8s ease-in-out infinite;
+  transform-origin: top;
 }
 @keyframes scroll-cue {
   0% { transform: scaleY(0); opacity: 0; }
@@ -2248,4 +2244,38 @@ button.tag-button.is-selected .tag-count {
 .settings-note,
 .lede {
   word-break: keep-all;
+}
+
+/* ---- 화면 맨 아래 연락처 줄 ---- */
+.site-footer {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 1.1rem clamp(20px, 5vw, 56px) 2.2rem;
+  border-top: 1px solid var(--border);
+}
+.footer-contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 1.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+}
+.footer-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.footer-contact a {
+  color: var(--text-dim);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.footer-contact a:hover,
+.footer-contact a:focus-visible {
+  color: var(--accent-strong);
+  border-color: var(--accent);
 }
