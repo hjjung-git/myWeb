@@ -15,7 +15,9 @@ public record PostSummaryResponse(
         ZonedDateTime lastModifiedAt,
         String category,
         String subcategory,
-        String minorCategory
+        String minorCategory,
+        String relatedSkills,
+        String relatedProjectIds
 ) {
     public static PostSummaryResponse from(Post post) {
         return new PostSummaryResponse(
@@ -25,7 +27,9 @@ public record PostSummaryResponse(
                 post.getLastModifiedAt(),
                 post.getCategory(),
                 post.getSubcategory(),
-                post.getMinorCategory()
+                post.getMinorCategory(),
+                post.getRelatedSkills(),
+                post.getRelatedProjectIds()
         );
     }
 }

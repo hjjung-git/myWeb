@@ -39,6 +39,13 @@ public class Post
     @Column(length = 50)
     private String minorCategory; // 소분류
 
+    // 포트폴리오와의 연결 — 쉼표로 구분한 기술 이름들 / 프로젝트(portfolio_item) id들
+    @Column(length = 500)
+    private String relatedSkills;
+
+    @Column(length = 200)
+    private String relatedProjectIds;
+
     // 엔티티 생성 및 업데이트 시 현재 시간을 자동으로 lastModifiedAt 필드에 저장
     @LastModifiedDate
     private ZonedDateTime lastModifiedAt;
@@ -71,6 +78,10 @@ public class Post
     public void setSubcategory(String subcategory) { this.subcategory = subcategory; }
     public String getMinorCategory() { return minorCategory; }
     public void setMinorCategory(String minorCategory) { this.minorCategory = minorCategory; }
+    public String getRelatedSkills() { return relatedSkills; }
+    public void setRelatedSkills(String relatedSkills) { this.relatedSkills = relatedSkills; }
+    public String getRelatedProjectIds() { return relatedProjectIds; }
+    public void setRelatedProjectIds(String relatedProjectIds) { this.relatedProjectIds = relatedProjectIds; }
     public ZonedDateTime getLastModifiedAt() { return lastModifiedAt; }
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }

@@ -120,6 +120,8 @@ public class PostServiceImpl implements PostService
         existingPost.setCategory(updatedPost.getCategory());
         existingPost.setSubcategory(updatedPost.getSubcategory());
         existingPost.setMinorCategory(updatedPost.getMinorCategory());
+        existingPost.setRelatedSkills(updatedPost.getRelatedSkills());
+        existingPost.setRelatedProjectIds(updatedPost.getRelatedProjectIds());
 
         return existingPost;
     }

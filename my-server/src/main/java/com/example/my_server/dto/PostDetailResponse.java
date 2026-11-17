@@ -15,7 +15,9 @@ public record PostDetailResponse(
         ZonedDateTime lastModifiedAt,
         String category,
         String subcategory,
-        String minorCategory
+        String minorCategory,
+        String relatedSkills,
+        String relatedProjectIds
 ) {
     public static PostDetailResponse from(Post post) {
         return new PostDetailResponse(
@@ -26,7 +28,9 @@ public record PostDetailResponse(
                 post.getLastModifiedAt(),
                 post.getCategory(),
                 post.getSubcategory(),
-                post.getMinorCategory()
+                post.getMinorCategory(),
+                post.getRelatedSkills(),
+                post.getRelatedProjectIds()
         );
     }
 }
