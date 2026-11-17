@@ -921,18 +921,26 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 }
 
 /* ---- archive: 카테고리 트리 레이아웃 (gyoogle.dev 같은 문서형 구조) ---- */
-/* Archive는 가운데 정렬하지 않고 화면 왼쪽(헤더와 같은 여백)부터 붙인다 —
+/* Archive는 [사이드바 + 본문] 한 덩어리를 화면 가운데에 놓는다 —
    긴 글 제목이 들어가는 사이드바에 폭을 넉넉히 주고, 본문은 읽기 좋은 폭까지만 넓힌다.
-   .site-main(840px, 가운데 정렬) 안에 있으므로 margin-left로 화면 왼쪽 끝까지 끌어낸다. */
+   .site-main(840px, 가운데 정렬) 안에 있으므로 화면 전체 폭으로 끌어낸 뒤 그 안에서 가운데 정렬한다.
+   --vw는 스크롤바를 뺀 화면 폭(App.jsx가 갱신)이라, 스크롤바가 보이는 환경에서도 정확히 가운데에 온다. */
 .archive-layout {
   --archive-gutter: clamp(20px, 5vw, 56px);
   display: grid;
   grid-template-columns: minmax(240px, 320px) minmax(0, 820px);
-  justify-content: start;
+  justify-content: center;
   gap: clamp(28px, 4vw, 56px);
   align-items: start;
-  width: calc(100vw - var(--archive-gutter) * 2);
-  margin-left: calc(50% - 50vw + var(--archive-gutter));
+  width: calc(var(--vw, 100vw) - var(--archive-gutter) * 2);
+  margin-left: calc(50% - var(--vw, 100vw) / 2 + var(--archive-gutter));
+}
+/* Archive 첫 화면(검색창)은 사이드바와 같은 폭의 빈 칸을 오른쪽에 둬서 화면 한가운데에 오게 한다.
+   칸 셋이 다 들어갈 만큼 넓을 때만 적용한다(좁으면 검색창 칸이 줄어들어서). */
+@media (min-width: 1400px) {
+  .archive-layout:has(.archive-home) {
+    grid-template-columns: minmax(240px, 320px) minmax(0, 600px) minmax(240px, 320px);
+  }
 }
 .archive-content {
   min-width: 0;
@@ -1808,9 +1816,9 @@ button.tag-button.is-selected .tag-count {
   position: relative;
   display: flex;
   align-items: center;
-  width: 100vw;
+  width: var(--vw, 100vw);
   margin-top: calc(var(--header-gap, 56px) * -1);
-  margin-left: calc(50% - 50vw);
+  margin-left: calc(50% - var(--vw, 100vw) / 2);
   min-height: calc(100vh - var(--header-h, 62px));
   min-height: calc(100svh - var(--header-h, 62px));
   padding: clamp(1.5rem, 4vh, 3rem) clamp(20px, 5vw, 56px) clamp(3.5rem, 9vh, 5rem);

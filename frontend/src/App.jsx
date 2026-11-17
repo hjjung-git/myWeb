@@ -39,6 +39,21 @@ function App() {
     return () => observer.disconnect()
   }, [])
 
+  // 스크롤바를 뺀 화면 폭을 --vw로 알려 준다 — 화면 전체 폭으로 펼치는 곳(메인 첫 화면, Archive)이
+  // 스크롤바 폭(100vw에는 포함됨)만큼 오른쪽으로 치우치지 않게 한다.
+  useEffect(() => {
+    const root = document.documentElement
+    const sync = () => root.style.setProperty('--vw', `${root.clientWidth}px`)
+    sync()
+    window.addEventListener('resize', sync)
+    const observer = new ResizeObserver(sync)
+    observer.observe(root)
+    return () => {
+      window.removeEventListener('resize', sync)
+      observer.disconnect()
+    }
+  }, [])
+
   return (
     <ThemeProvider>
       <AuthProvider>
