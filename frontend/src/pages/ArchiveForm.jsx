@@ -3,6 +3,9 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { apiGet, apiMutate, apiUpload } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 import MarkdownLiveEditor from '../components/MarkdownLiveEditor.jsx'
+import RelationPicker from '../components/RelationPicker.jsx'
+import { SKILL_GROUPS } from '../lib/skillsData.js'
+import { fetchPortfolioChoices, splitTech } from '../lib/portfolioApi.js'
 
 // 아카이브 글 작성/수정 폼. 매매일지(TRADE_LOG) 관련 필드는 백엔드 레거시 정리 때
 // 도메인째로 삭제되어 더 이상 존재하지 않는다.
@@ -22,6 +25,9 @@ function ArchiveForm() {
   const [category, setCategory] = useState(() => (isEdit ? '' : searchParams.get('category') || ''))
   const [subcategory, setSubcategory] = useState(() => (isEdit ? '' : searchParams.get('sub') || ''))
   const [minorCategory, setMinorCategory] = useState(() => (isEdit ? '' : searchParams.get('minor') || ''))
+  const [relatedSkills, setRelatedSkills] = useState([]) // 포트폴리오와 엮기: 기술 이름들
+  const [relatedProjectIds, setRelatedProjectIds] = useState([]) // 프로젝트·경력 id들(문자열)
+  const [choices, setChoices] = useState([]) // 고를 수 있는 프로젝트·경력
   const [allPosts, setAllPosts] = useState([])
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -36,6 +42,8 @@ function ArchiveForm() {
         setCategory(post.category ?? '')
         setSubcategory(post.subcategory ?? '')
         setMinorCategory(post.minorCategory ?? '')
+        setRelatedSkills(splitTech(post.relatedSkills))
+        setRelatedProjectIds(splitTech(post.relatedProjectIds))
         setReady(true)
       })
       .catch((err) => setError(err.message))
@@ -47,6 +55,13 @@ function ArchiveForm() {
       .then(setAllPosts)
       .catch(() => setAllPosts([]))
   }, [])
+
+  useEffect(() => {
+    fetchPortfolioChoices().then(setChoices).catch(() => setChoices([]))
+  }, [])
+
+  // 같은 이름이 두 그룹에 있어도(예: Cypher) 한 번만 보여준다
+  const skillOptions = [...new Set(SKILL_GROUPS.flatMap((g) => g.tags))].map((t) => ({ value: t, label: t }))
 
   const categoryOptions = [...new Set(allPosts.map((p) => p.category).filter(Boolean))].sort()
   const subcategoryOptions = [
@@ -78,7 +93,15 @@ function ArchiveForm() {
     setError(null)
     setSubmitting(true)
     try {
-      const payload = { title, content, category, subcategory, minorCategory }
+      const payload = {
+        title,
+        content,
+        category,
+        subcategory,
+        minorCategory,
+        relatedSkills: relatedSkills.join(','),
+        relatedProjectIds: relatedProjectIds.join(','),
+      }
       const saved = isEdit
         ? await apiMutate(`/api/posts/${id}`, 'PUT', payload)
         : await apiMutate('/api/posts', 'POST', payload)
@@ -136,6 +159,20 @@ function ArchiveForm() {
           </datalist>
         </label>
       </div>
+
+      <RelationPicker
+        label="관련 기술 (선택 — 이 글과 이어지는 Skills)"
+        options={skillOptions}
+        selected={relatedSkills}
+        onChange={setRelatedSkills}
+      />
+      <RelationPicker
+        label="관련 프로젝트·경력 (선택)"
+        options={choices.map((c) => ({ value: c.id, label: `${c.title}` }))}
+        selected={relatedProjectIds}
+        onChange={setRelatedProjectIds}
+        empty="등록된 프로젝트·경력이 없습니다."
+      />
 
       {/* <label>이 아니라 div인 이유: 라벨 안에 "이미지 첨부" 버튼이 있으면 라벨 아무 곳이나 클릭해도
           그 버튼이 눌린 것으로 처리돼서 파일 선택창이 뜨기 때문 */}

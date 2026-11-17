@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiGet, apiMutate, apiUpload, apiResourceUrl } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
+import BackButton from '../components/BackButton.jsx'
 
 // 교육 상세 페이지 — 배운 내용, 결과물(프로젝트 링크), 수료증(PDF)을 확인할 수 있다.
 // 수료증 PDF는 /api/educations/{id}/certificate에서 직접 스트리밍해주므로 <object>로 그대로 띄운다.
@@ -85,7 +86,7 @@ function EducationDetail() {
   return (
     <article className="portfolio-detail" style={{ padding: 'clamp(28px, 5vw, 44px) 0' }}>
       {/* 보던 위치로 돌아간다 (처음 들어온 화면이면 교육 섹션으로) */}
-      <Link to="/#educations" state={{ restoreScroll: true }} className="back-link">← 목록으로</Link>
+      <BackButton to="/#educations" label="목록으로 돌아가기" />
 
       {isAdmin && (
         <div className="detail-toolbar">

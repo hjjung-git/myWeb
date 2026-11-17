@@ -86,7 +86,7 @@
   pointer-events: none;
 }
 
-/* Archive 글 화면: 메모 칸이 생기면 글 칸을 메모 칸 폭만큼 넓혀서 본문 폭(최대 820px)을 지킨다. */
+/* Archive 글 화면: 메모 칸이 생기면 가운데 칸을 메모 칸 폭만큼 넓혀서 본문 폭(최대 820px)을 지킨다. */
 .archive-layout:has(.sn-layout.is-wide) {
-  grid-template-columns: minmax(240px, 320px) minmax(0, 1072px);
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 1072px) minmax(0, 1fr);
 }

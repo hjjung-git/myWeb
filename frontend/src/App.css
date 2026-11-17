@@ -638,7 +638,7 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 }
 
 /* 스티키 헤더에 섹션 상단이 가려지지 않도록 앵커 이동 시 여유를 둔다 */
-#about, #skills, #portfolio, #educations, #certifications, #archive {
+#about, #skills, #career, #projects, #educations, #certifications, #archive {
   scroll-margin-top: 96px;
 }
 
@@ -921,26 +921,18 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 }
 
 /* ---- archive: 카테고리 트리 레이아웃 (gyoogle.dev 같은 문서형 구조) ---- */
-/* Archive는 [사이드바 + 본문] 한 덩어리를 화면 가운데에 놓는다 —
-   긴 글 제목이 들어가는 사이드바에 폭을 넉넉히 주고, 본문은 읽기 좋은 폭까지만 넓힌다.
-   .site-main(840px, 가운데 정렬) 안에 있으므로 화면 전체 폭으로 끌어낸 뒤 그 안에서 가운데 정렬한다.
+/* Archive는 [사이드바 | 본문 | 빈 칸] 3칸이다 — 사이드바는 화면 왼쪽(헤더와 같은 여백)에 붙고 스크롤을 따라오지 않으며,
+   본문은 남는 폭의 가운데에 온다(좁은 화면에서는 사이드바 폭만큼 먼저 비켜 준다).
+   .site-main(840px, 가운데 정렬) 안에 있으므로 화면 전체 폭으로 끌어낸다.
    --vw는 스크롤바를 뺀 화면 폭(App.jsx가 갱신)이라, 스크롤바가 보이는 환경에서도 정확히 가운데에 온다. */
 .archive-layout {
   --archive-gutter: clamp(20px, 5vw, 56px);
   display: grid;
-  grid-template-columns: minmax(240px, 320px) minmax(0, 820px);
-  justify-content: center;
-  gap: clamp(28px, 4vw, 56px);
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 820px) minmax(0, 1fr);
+  column-gap: clamp(28px, 4vw, 56px);
   align-items: start;
   width: calc(var(--vw, 100vw) - var(--archive-gutter) * 2);
   margin-left: calc(50% - var(--vw, 100vw) / 2 + var(--archive-gutter));
-}
-/* Archive 첫 화면(검색창)은 사이드바와 같은 폭의 빈 칸을 오른쪽에 둬서 화면 한가운데에 오게 한다.
-   칸 셋이 다 들어갈 만큼 넓을 때만 적용한다(좁으면 검색창 칸이 줄어들어서). */
-@media (min-width: 1400px) {
-  .archive-layout:has(.archive-home) {
-    grid-template-columns: minmax(240px, 320px) minmax(0, 600px) minmax(240px, 320px);
-  }
 }
 .archive-content {
   min-width: 0;
@@ -953,10 +945,8 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 }
 
 .archive-sidebar {
-  position: sticky;
-  top: 88px;
-  max-height: calc(100vh - 104px);
-  overflow-y: auto;
+  width: 100%;
+  max-width: 300px;
   padding: clamp(28px, 5vw, 44px) 4px 24px 0;
   font-size: 0.9rem;
 }
@@ -1822,10 +1812,7 @@ button.tag-button.is-selected .tag-count {
   min-height: calc(100vh - var(--header-h, 62px));
   min-height: calc(100svh - var(--header-h, 62px));
   padding: clamp(1.5rem, 4vh, 3rem) clamp(20px, 5vw, 56px) clamp(3.5rem, 9vh, 5rem);
-  background:
-    radial-gradient(60% 70% at 78% 45%, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 70%),
-    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--text-faint) 28%, transparent) 1px, transparent 1.5px) 0 0 / 28px 28px;
-  border-bottom: 1px solid var(--border);
+  background: radial-gradient(60% 70% at 78% 45%, color-mix(in srgb, var(--accent) 13%, transparent) 0%, transparent 70%);
 }
 .hero-inner {
   display: grid;
@@ -1879,9 +1866,7 @@ button.tag-button.is-selected .tag-count {
     justify-self: start;
   }
   .hero-screen {
-    background:
-      radial-gradient(70% 45% at 70% 18%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%),
-      radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--text-faint) 28%, transparent) 1px, transparent 1.5px) 0 0 / 28px 28px;
+    background: radial-gradient(70% 45% at 70% 18%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%);
   }
 }
 @media (max-height: 520px) and (min-width: 861px) {
@@ -1999,7 +1984,10 @@ html:not([data-reduce-motion]) .hero-scroll i {
   }
 }
 
-/* 소개(Overview 첫 구역) */
+/* 소개(Overview 첫 구역) — 첫 화면과 이어지도록 위쪽 경계선을 두지 않는다 */
+.about-intro {
+  border-top: none;
+}
 .about-intro .hero-facts {
   margin: 0 0 1.4rem;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -2286,4 +2274,391 @@ html:not([data-reduce-motion]) .hero-scroll i {
 .footer-contact a:focus-visible {
   color: var(--accent-strong);
   border-color: var(--accent);
+}
+
+/* ================= 전체 배경: 점이 격자로 이어진 무늬 =================
+   메인 첫 화면에만 있던 점 격자를 모든 화면 배경으로 넓혔다. 화면 위쪽에는 은은한 강조색 빛을 화면에 고정해 둔다(스크롤해도 그대로). */
+body {
+  background-image:
+    radial-gradient(60% 45% at 88% 0%, color-mix(in srgb, var(--accent) 7%, transparent) 0%, transparent 70%),
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--text-faint) 28%, transparent) 1px, transparent 1.5px);
+  background-size: 100% 100%, 28px 28px;
+  background-attachment: fixed, scroll;
+}
+
+/* ================= 움직임(동적 UX) =================
+   전부 설정의 "움직임 줄이기"(html[data-reduce-motion])가 꺼져 있을 때만 켜진다. 기본값은 OS의 "동작 줄이기"를 따른다. */
+
+/* 화면이 바뀔 때 — 같은 단계끼리 이동하면 살짝 떠오르고(page-in),
+   안으로 들어가면(목록 → 상세) 확대되며 나타나고(zoom-in), 돌아오면(상세 → 목록) 반대로 축소되며 제자리로 온다(zoom-out).
+   확대·축소는 요소의 윗변을 기준으로 해서, 돌아왔을 때 보던 섹션의 위치가 어긋나지 않게 한다. */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes zoom-in-page {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes zoom-out-page {
+  from { opacity: 0; transform: scale(1.06); }
+  to { opacity: 1; transform: none; }
+}
+html:not([data-reduce-motion]) .site-main > *:not(.hero-screen),
+html:not([data-reduce-motion]) .archive-content > * {
+  animation: page-in 0.28s ease-out backwards;
+  transform-origin: 50% 0;
+}
+html:not([data-reduce-motion])[data-nav="forward"] .site-main > *:not(.hero-screen),
+html:not([data-reduce-motion])[data-nav="forward"] .archive-content > * {
+  animation: zoom-in-page 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+html:not([data-reduce-motion])[data-nav="back"] .site-main > *:not(.hero-screen),
+html:not([data-reduce-motion])[data-nav="back"] .archive-content > * {
+  animation: zoom-out-page 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+/* 메인 첫 화면 글이 차례로 나타난다 */
+@keyframes hero-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+html:not([data-reduce-motion]) .hero-copy > * {
+  animation: hero-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+html:not([data-reduce-motion]) .hero-copy > *:nth-child(2) { animation-delay: 0.08s; }
+html:not([data-reduce-motion]) .hero-copy > *:nth-child(3) { animation-delay: 0.16s; }
+html:not([data-reduce-motion]) .hero-copy > *:nth-child(4) { animation-delay: 0.24s; }
+html:not([data-reduce-motion]) .hero-copy > *:nth-child(5) { animation-delay: 0.32s; }
+
+/* 스크롤하면 제목·카드가 화면에 들어올 때 아래에서 떠오른다.
+   브라우저가 스크롤 연동 애니메이션(animation-timeline)을 지원할 때만 쓰고, 아니면 그냥 보인다.
+   fill-mode를 backwards로 둬서, 들어온 뒤에는 원래 스타일(hover 효과 포함)로 돌아간다. */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(52px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@supports (animation-timeline: view()) {
+  html:not([data-reduce-motion]) .portfolio-section > .eyebrow,
+  html:not([data-reduce-motion]) .portfolio-section > .section-title,
+  html:not([data-reduce-motion]) .about-text,
+  html:not([data-reduce-motion]) .skill-card,
+  html:not([data-reduce-motion]) .project-card,
+  html:not([data-reduce-motion]) .tl-item,
+  html:not([data-reduce-motion]) .cert-card {
+    animation: reveal-up linear backwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 85%;
+  }
+}
+
+/* 카드에 마우스를 올리면 아주 살짝 떠오르며 그림자가 짙어진다. 라이트는 그림자만, 다크는 그림자가 안 보이므로 강조색 은은한 빛을 더한다. */
+:root {
+  --hover-shadow: 0 1px 2px rgba(15, 25, 20, 0.06), 0 14px 26px -16px rgba(15, 25, 20, 0.34);
+}
+[data-theme="dark"] {
+  --hover-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.8), 0 0 22px -8px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+html:not([data-reduce-motion]) .project-card,
+html:not([data-reduce-motion]) .skill-card,
+html:not([data-reduce-motion]) .cert-card {
+  transition: border-color 0.45s ease, transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.45s ease;
+}
+html:not([data-reduce-motion]) .project-card:hover,
+html:not([data-reduce-motion]) .skill-card:hover,
+html:not([data-reduce-motion]) .cert-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--hover-shadow);
+}
+
+/* 버튼은 누르는 순간 살짝 눌린다 */
+html:not([data-reduce-motion]) .btn-primary,
+html:not([data-reduce-motion]) .btn-secondary {
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease, transform 0.12s ease;
+}
+html:not([data-reduce-motion]) .btn-primary:active,
+html:not([data-reduce-motion]) .btn-secondary:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* 상단 탭 밑줄 — 하나가 선택된 탭으로 미끄러져 이동한다(TabNav.jsx가 위치·폭을 지정) */
+.tab-nav {
+  position: relative;
+}
+.tab-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 1px;
+  background: var(--accent);
+  pointer-events: none;
+  transition: transform 0.38s cubic-bezier(0.22, 0.61, 0.36, 1), width 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.tab-nav.has-indicator .tab-link.active {
+  border-color: transparent;
+}
+
+/* 상세 화면 맨 위 돌아가기 아이콘 버튼 */
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-bottom: 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+.back-btn svg {
+  transition: transform 0.25s ease;
+}
+.back-btn:hover,
+.back-btn:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+.back-btn:hover svg,
+.back-btn:focus-visible svg {
+  transform: translateX(-2px);
+}
+
+/* Skills "관계 보기" — 기술 ↔ 프로젝트 ↔ Archive 글 (RelationGraph.jsx) */
+.view-switch {
+  display: inline-flex;
+  margin: 0.2rem 0 1.1rem;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.view-switch button {
+  padding: 0.3rem 0.95rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+.view-switch button.is-on {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+.rel-graph {
+  margin: 0 0 1.2rem;
+  padding: 0.9rem 0.6rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.rel-graph svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.rel-graph figcaption {
+  padding: 0.4rem 0.8rem 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+.rg-head {
+  fill: var(--text-faint);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.rg-edge {
+  fill: none;
+  stroke: color-mix(in srgb, var(--text-faint) 60%, transparent);
+  stroke-width: 1.2;
+  transition: stroke 0.3s ease, opacity 0.3s ease, stroke-width 0.3s ease;
+}
+.rg-edge.is-lit {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.rg-edge.is-dim {
+  opacity: 0.12;
+}
+.rg-node {
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.3s ease;
+}
+.rg-node.is-dim {
+  opacity: 0.25;
+}
+.rg-node rect {
+  fill: var(--surface);
+  stroke: color-mix(in srgb, var(--accent) 45%, var(--border));
+  stroke-width: 1.4;
+  transition: fill 0.3s ease, stroke 0.3s ease;
+}
+.rg-node text {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  pointer-events: none;
+}
+.rg-skill rect { stroke: var(--accent); }
+.rg-post rect { stroke-dasharray: 4 3; }
+.rg-node:hover rect,
+.rg-node:focus-visible rect {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.rg-node.is-focus rect {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+.rg-node.is-focus text {
+  fill: var(--accent-contrast);
+  font-weight: 600;
+}
+/* 좁은 화면: 그림은 글씨가 너무 작아져서 숨기고 목록만 보여준다 */
+.rel-graph-narrow { display: none; }
+@media (max-width: 720px) {
+  .rel-graph { display: none; }
+  .rel-graph-narrow { display: block; }
+}
+@media (min-width: 721px) {
+  .rel-hide-wide { display: none; }
+}
+
+/* Archive ↔ 포트폴리오 연결 (PostRelations, RelatedPosts, RelationPicker) */
+.post-relations {
+  margin: 0.2rem 0 1.3rem;
+  display: grid;
+  gap: 0.45rem;
+}
+.post-relations p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+}
+.post-relations-label {
+  min-width: 3.4rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+a.tag-link {
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  text-decoration: none;
+  transition: border-color 0.25s ease, background-color 0.25s ease;
+}
+a.tag-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.related-posts {
+  margin-top: 2.2rem;
+}
+.related-posts ul {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.related-posts li + li {
+  border-top: 1px solid var(--border);
+}
+.related-posts a {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.2rem 1rem;
+  padding: 0.7rem 0;
+  color: inherit;
+  text-decoration: none;
+}
+.related-posts a:hover .related-post-title {
+  color: var(--accent);
+}
+.related-post-path {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+.relation-picker .tag-row {
+  margin-top: 0.5rem;
+}
+.rg-edge-pp {
+  stroke-dasharray: 5 4;
+}
+
+/* 한눈에 보기 — 정적 다이어그램 (OverviewMap.jsx) */
+.overview-map {
+  margin: 0;
+  padding: 0.6rem 0.4rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+}
+.overview-scroll {
+  overflow-x: auto;
+}
+.overview-scroll svg {
+  display: block;
+  width: 100%;
+  min-width: 680px;
+  height: auto;
+}
+.overview-map figcaption {
+  padding: 0.3rem 0.9rem 0.6rem;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+.om-head {
+  fill: var(--text-faint);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+.om-edge {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 55%, transparent);
+  stroke-width: 1.4;
+}
+.om-edge-far {
+  stroke: color-mix(in srgb, var(--text-faint) 55%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+.om-node {
+  cursor: pointer;
+  outline: none;
+}
+.om-node rect {
+  fill: var(--surface);
+  stroke: color-mix(in srgb, var(--accent) 45%, var(--border));
+  stroke-width: 1.5;
+  transition: stroke 0.3s ease, fill 0.3s ease;
+}
+.om-node text {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.om-skill rect { stroke: var(--accent); }
+.om-career rect { stroke-dasharray: 5 3; }
+.om-cat .om-count {
+  fill: var(--text-faint);
+  font-weight: 500;
+}
+.om-node:hover rect,
+.om-node:focus-visible rect {
+  stroke: var(--accent);
+  fill: var(--accent-soft);
 }

@@ -9,6 +9,7 @@ import SidenoteLayout from '../components/SidenoteLayout.jsx'
 import { apiGet, apiMutate, resolveImageSrc } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 import MermaidBlock from '../components/MermaidBlock.jsx'
+import PostRelations from '../components/PostRelations.jsx'
 
 function formatDate(iso) {
   if (!iso) return ''
@@ -74,6 +75,7 @@ function ArchiveDetail() {
 
       <h1>{post.title}</h1>
       <p className="portfolio-period">{post.username} · {formatDate(post.lastModifiedAt)}</p>
+      <PostRelations post={post} />
       <SidenoteLayout enabled={/^\[\^[^\]]+\]:/m.test(post.content || '')}>
       <div className="portfolio-body markdown-body">
         <ReactMarkdown

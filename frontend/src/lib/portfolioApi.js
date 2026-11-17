@@ -47,3 +47,32 @@ export function sameTech(a, b) {
 export function projectsUsing(skill, projects) {
   return projects.filter((project) => splitTech(project.techStack).some((tech) => sameTech(skill, tech)))
 }
+
+// 이 기술과 이어진 Archive 글들 — ① 글 작성 화면에서 직접 고른 '관련 기술' 또는 ② 제목·분류(대분류›중분류›소분류)에 기술 이름이 들어 있으면 자동 연결
+export function postsAbout(skill, posts) {
+  const need = tokens(skill)
+  if (need.size === 0) return []
+  return posts.filter((post) => {
+    if (splitTech(post.relatedSkills).some((name) => sameTech(skill, name))) return true
+    const text = [post.title, post.category, post.subcategory, post.minorCategory].filter(Boolean).join(' ')
+    return isSubset(need, tokens(text))
+  })
+}
+
+// 글 작성 화면에서 이 프로젝트(또는 경력)를 '관련 프로젝트'로 고른 Archive 글들
+export function postsForProject(projectId, posts) {
+  const key = String(projectId)
+  return posts.filter((post) => splitTech(post.relatedProjectIds).includes(key))
+}
+
+// 글 쓰기에서 고를 수 있는 프로젝트·경력 목록 (id → 제목)
+export async function fetchPortfolioChoices() {
+  const [projects, experience] = await Promise.all([
+    apiGet('/api/portfolio-items?type=PROJECT'),
+    apiGet('/api/portfolio-items?type=EXPERIENCE'),
+  ])
+  return [
+    ...projects.map((p) => ({ id: String(p.id), title: p.title, kind: '프로젝트' })),
+    ...experience.map((p) => ({ id: String(p.id), title: p.title, kind: '경력' })),
+  ]
+}

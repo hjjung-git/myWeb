@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiGet, apiMutate, apiUpload, apiResourceUrl } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
+import BackButton from '../components/BackButton.jsx'
 
 function formatDate(isoDate) {
   if (!isoDate) return null
@@ -92,7 +93,7 @@ function CertificationDetail() {
   return (
     <article className="portfolio-detail" style={{ padding: 'clamp(28px, 5vw, 44px) 0' }}>
       {/* 보던 위치로 돌아간다 (처음 들어온 화면이면 어학/자격증 섹션으로) */}
-      <Link to="/#certifications" state={{ restoreScroll: true }} className="back-link">← 목록으로</Link>
+      <BackButton to="/#certifications" label="목록으로 돌아가기" />
 
       {isAdmin && (
         <div className="detail-toolbar">

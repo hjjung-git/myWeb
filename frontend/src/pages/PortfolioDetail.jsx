@@ -4,11 +4,15 @@ import { apiGet, apiMutate } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 import { splitTech } from '../lib/portfolioApi.js'
 import MarkdownView from '../components/MarkdownView.jsx'
+import BackButton from '../components/BackButton.jsx'
+import RelatedPosts from '../components/RelatedPosts.jsx'
+import { useActiveSection } from '../lib/ActiveSectionContext.jsx'
 
 function PortfolioDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { isAdmin } = useAuth()
+  const { setActiveId } = useActiveSection()
   const [item, setItem] = useState(null)
   const [error, setError] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -17,7 +21,11 @@ function PortfolioDetail() {
     setItem(null)
     setError(null)
     apiGet(`/api/portfolio-items/${id}`)
-      .then(setItem)
+      .then((data) => {
+        setItem(data)
+        // 위 탭에서 경력(Career)/프로젝트(Projects) 중 이 항목이 속한 쪽을 선택 표시한다.
+        setActiveId(data.type === 'EXPERIENCE' ? 'career' : 'projects')
+      })
       .catch((err) => setError(err.message))
   }, [id])
 
@@ -25,7 +33,7 @@ function PortfolioDetail() {
     setDeleting(true)
     try {
       await apiMutate(`/api/portfolio-items/${id}`, 'DELETE')
-      navigate('/portfolio')
+      navigate(item?.type === 'EXPERIENCE' ? '/#career' : '/portfolio')
     } catch (err) {
       setError(err.message)
       setDeleting(false)
@@ -47,7 +55,10 @@ function PortfolioDetail() {
   return (
     <article className="portfolio-detail" style={{ padding: 'clamp(28px, 5vw, 44px) 0' }}>
       {/* 경력/프로젝트 전체 페이지로 돌아간다 (보던 위치 그대로) */}
-      <Link to="/portfolio" state={{ restoreScroll: true }} className="back-link">← 경력 / 프로젝트</Link>
+      <BackButton
+        to={item.type === 'EXPERIENCE' ? '/#career' : '/portfolio'}
+        label={item.type === 'EXPERIENCE' ? '경력 목록으로 돌아가기' : '프로젝트 목록으로 돌아가기'}
+      />
 
       {isAdmin && (
         <div className="detail-toolbar">
@@ -125,6 +136,8 @@ function PortfolioDetail() {
           )}
         </>
       )}
+
+      <RelatedPosts projectId={id} />
     </article>
   )
 }

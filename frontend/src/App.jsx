@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Routes, Route, Link } from 'react-router-dom'
+import { useEffect, useLayoutEffect, useRef } from 'react'
+import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import { AuthProvider } from './lib/AuthContext.jsx'
 import { ThemeProvider } from './lib/ThemeContext.jsx'
 import { ActiveSectionProvider } from './lib/ActiveSectionContext.jsx'
@@ -27,7 +27,20 @@ import ArchiveDetail from './pages/ArchiveDetail.jsx'
 import ArchiveForm from './pages/ArchiveForm.jsx'
 import './App.css'
 
+// 주소의 깊이 — "/"=0, "/archive"·"/portfolio"=1, "/portfolio/3"·"/archive/new"=2 …
+// 깊어지면 "들어간다"(확대되며 나타남), 얕아지면 "돌아온다"(축소되며 제자리로)로 보고 html에 표시해 둔다(CSS가 이걸로 애니메이션을 고른다).
+const depthOf = (pathname) => pathname.split('/').filter(Boolean).length
+
 function App() {
+  const location = useLocation()
+  const prevPath = useRef(location.pathname)
+  useLayoutEffect(() => {
+    const before = depthOf(prevPath.current)
+    const after = depthOf(location.pathname)
+    document.documentElement.dataset.nav = after > before ? 'forward' : after < before ? 'back' : 'same'
+    prevPath.current = location.pathname
+  }, [location.pathname])
+
   // 헤더 높이를 CSS 변수로 알려 준다 — 메인 화면이 "헤더를 뺀 화면 전체"를 딱 채우도록 (창 크기가 바뀌어도 따라감).
   useEffect(() => {
     const header = document.querySelector('.site-header')
@@ -77,7 +90,7 @@ function App() {
                 {/* 영역별 전용 페이지 — 홈은 각 영역의 Overview, 자세한 내용은 여기 */}
                 <Route path="/about" element={<About full />} />
                 <Route path="/skills" element={<Skills full />} />
-                <Route path="/portfolio" element={<PortfolioList full />} />
+                <Route path="/portfolio" element={<PortfolioList full part="projects" />} />
                 <Route path="/portfolio/new" element={<PortfolioForm />} />
                 <Route path="/portfolio/:id" element={<PortfolioDetail />} />
                 <Route path="/portfolio/:id/edit" element={<PortfolioForm />} />

@@ -2,7 +2,8 @@
 export const SECTIONS = [
   { id: 'about', label: 'About' },
   { id: 'skills', label: 'Skills' },
-  { id: 'portfolio', label: 'Career / Projects' },
+  { id: 'career', label: 'Career' },
+  { id: 'projects', label: 'Projects' },
   { id: 'educations', label: '교육' },
   { id: 'certifications', label: '어학 / 자격증' },
 ]
@@ -11,7 +12,9 @@ export const SECTIONS = [
 export function activeSectionFor(pathname, activeId) {
   if (pathname.startsWith('/about')) return 'about'
   if (pathname.startsWith('/skills')) return 'skills'
-  if (pathname.startsWith('/portfolio')) return 'portfolio'
+  // 경력/프로젝트 전체 목록(/portfolio)은 Projects, 상세·작성·수정(/portfolio/…)은 직전에 보던 쪽(없으면 Projects)
+  if (pathname === '/portfolio') return 'projects'
+  if (pathname.startsWith('/portfolio/')) return activeId === 'career' || activeId === 'projects' ? activeId : 'projects'
   if (pathname.startsWith('/educations')) return 'educations'
   if (pathname.startsWith('/certifications')) return 'certifications'
   return activeId
