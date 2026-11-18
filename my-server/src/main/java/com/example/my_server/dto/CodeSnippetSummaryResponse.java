@@ -9,6 +9,7 @@ public record CodeSnippetSummaryResponse(
         Long id,
         String title,
         String language,
+        String category,
         String description,
         String relatedSkills,
         String relatedProjectIds,
@@ -16,7 +17,7 @@ public record CodeSnippetSummaryResponse(
 ) {
     public static CodeSnippetSummaryResponse from(CodeSnippet s) {
         return new CodeSnippetSummaryResponse(
-                s.getId(), s.getTitle(), s.getLanguage(), s.getDescription(),
+                s.getId(), s.getTitle(), s.getLanguage(), s.getCategory(), s.getDescription(),
                 s.getRelatedSkills(), s.getRelatedProjectIds(), s.getLastModifiedAt());
     }
 }

@@ -5,7 +5,7 @@ import { useAuth } from '../lib/AuthContext.jsx'
 import MarkdownLiveEditor from '../components/MarkdownLiveEditor.jsx'
 import RelationPicker from '../components/RelationPicker.jsx'
 import { SKILL_GROUPS } from '../lib/skillsData.js'
-import { COMMON_LANGUAGES } from '../lib/codebase.js'
+import { COMMON_LANGUAGES, CODE_CATEGORIES } from '../lib/codebase.js'
 import { fetchPortfolioChoices, splitTech } from '../lib/portfolioApi.js'
 
 // Codebase 글 작성/수정 폼 — Archive 글 작성과 같은 마크다운 편집기. 코드는 ```언어 ``` 블록으로 넣는다.
@@ -17,6 +17,7 @@ function CodebaseForm() {
 
   const [title, setTitle] = useState('')
   const [language, setLanguage] = useState('')
+  const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
   const [content, setContent] = useState('')
   const [relatedSkills, setRelatedSkills] = useState([])
@@ -33,6 +34,7 @@ function CodebaseForm() {
       .then((s) => {
         setTitle(s.title)
         setLanguage(s.language)
+        setCategory(s.category ?? '')
         setDescription(s.description ?? '')
         setContent(s.content)
         setRelatedSkills(splitTech(s.relatedSkills))
@@ -48,6 +50,7 @@ function CodebaseForm() {
   }, [])
 
   const languageOptions = [...new Set([...COMMON_LANGUAGES, ...existing.map((s) => s.language)])]
+  const categoryOptions = [...new Set([...CODE_CATEGORIES, ...existing.map((s) => s.category).filter(Boolean)])]
   const skillOptions = [...new Set(SKILL_GROUPS.flatMap((g) => g.tags))].map((t) => ({ value: t, label: t }))
 
   if (!loading && !isAdmin) return <p className="status status-error">관리자 모드에서만 사용할 수 있습니다.</p>
@@ -67,6 +70,7 @@ function CodebaseForm() {
       const payload = {
         title,
         language,
+        category,
         description,
         content,
         relatedSkills: relatedSkills.join(','),
@@ -102,7 +106,15 @@ function CodebaseForm() {
       </div>
 
       <label>
-        한 줄 설명 (선택 — 목록 카드에 보여요)
+        용도 (선택 — 언어 안에서 묶는 소제목)
+        <input value={category} onChange={(e) => setCategory(e.target.value)} maxLength={30} list="codebase-category-options" placeholder="예: 재사용 알고리즘" />
+        <datalist id="codebase-category-options">
+          {categoryOptions.map((name) => <option key={name} value={name} />)}
+        </datalist>
+      </label>
+
+      <label>
+        한 줄 설명 (선택 — 목록에 보여요)
         <input value={description} onChange={(e) => setDescription(e.target.value)} maxLength={300} />
       </label>
 

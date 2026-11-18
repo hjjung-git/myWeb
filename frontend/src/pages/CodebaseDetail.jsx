@@ -50,7 +50,7 @@ function CodebaseDetail() {
       )}
       <p className="cb-card-lang">
         <i style={{ background: languageColor(snippet.language) }} />
-        {snippet.language}
+        {snippet.language}{snippet.category ? ` · ${snippet.category}` : ''}
       </p>
       <h1>{snippet.title}</h1>
       {snippet.description && <p className="portfolio-summary">{snippet.description}</p>}

@@ -2955,30 +2955,47 @@ a.tag-link:hover {
 .cb-lang:hover { border-color: var(--accent); }
 .cb-lang.is-on { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
 .cb-lang.is-on em { color: inherit; opacity: 0.8; }
-.cb-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.1rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.cb-card {
+.cb-frames { display: grid; gap: 1.4rem; }
+.cb-frame {
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--surface);
+  padding: 1.1rem 1.4rem 1.3rem;
 }
-.cb-card a {
+.cb-frame-head {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.55rem;
-  height: 100%;
-  padding: 1.2rem 1.3rem;
+  margin: 0 0 0.9rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.15rem;
+}
+.cb-frame-head i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; }
+.cb-frame-head em, .cb-group-title em { font-style: normal; font-size: 0.8rem; font-weight: 500; color: var(--text-faint); }
+.cb-group + .cb-group { margin-top: 1.1rem; }
+.cb-group-title {
+  margin: 0 0 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+.cb-list { margin: 0; padding: 0; list-style: none; }
+.cb-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 8px;
   color: inherit;
   text-decoration: none;
 }
-.cb-card h3 { margin: 0; font-size: 1.05rem; }
-.cb-card p { margin: 0; color: var(--text-dim); font-size: 0.9rem; line-height: 1.6; }
+.cb-row-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.8rem; min-width: 0; flex: 1; }
+.cb-row-main strong { font-size: 0.98rem; }
+.cb-row-main span { color: var(--text-dim); font-size: 0.86rem; }
+.cb-row time { flex: none; font-size: 0.76rem; color: var(--text-faint); }
+.cb-row:hover { background: var(--accent-soft); }
 .cb-card-lang {
   display: inline-flex;
   align-items: center;
@@ -2989,17 +3006,10 @@ a.tag-link:hover {
   letter-spacing: 0.04em;
   color: var(--text-dim);
 }
-.cb-card-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: auto;
-  padding-top: 0.4rem;
+@media (max-width: 560px) {
+  .cb-frame { padding: 1rem 0.9rem 1.1rem; }
+  .cb-row { flex-direction: column; gap: 0.1rem; }
 }
-.cb-card-foot time { margin-left: auto; font-size: 0.76rem; color: var(--text-faint); }
-html:not([data-reduce-motion]) .cb-card { transition: border-color 0.45s ease, transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.45s ease; }
-html:not([data-reduce-motion]) .cb-card:hover { transform: translateY(-2px); box-shadow: var(--hover-shadow); border-color: var(--accent); }
 .codebase-detail { max-width: 860px; margin: 0 auto; }
 
 /* ---- 기술 막대(적응형 레벨) ---- */

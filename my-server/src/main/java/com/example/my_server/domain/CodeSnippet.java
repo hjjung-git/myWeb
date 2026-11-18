@@ -22,6 +22,10 @@ public class CodeSnippet
     @Column(nullable = false, length = 30)
     private String language;
 
+    // 용도 — 언어 안에서 글을 묶는 소제목(예: 재사용 알고리즘, 효율적인 코드, 짧은 표현). 비워 두면 '기타'로 보인다.
+    @Column(length = 30)
+    private String category;
+
     @Column(length = 300)
     private String description;
 
@@ -40,6 +44,7 @@ public class CodeSnippet
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public String getLanguage() { return language; }
+    public String getCategory() { return category; }
     public String getDescription() { return description; }
     public String getContent() { return content; }
     public String getRelatedSkills() { return relatedSkills; }
@@ -48,6 +53,7 @@ public class CodeSnippet
 
     public void setTitle(String title) { this.title = title; }
     public void setLanguage(String language) { this.language = language; }
+    public void setCategory(String category) { this.category = category; }
     public void setDescription(String description) { this.description = description; }
     public void setContent(String content) { this.content = content; }
     public void setRelatedSkills(String relatedSkills) { this.relatedSkills = relatedSkills; }

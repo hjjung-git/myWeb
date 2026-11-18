@@ -4,6 +4,7 @@ import { apiGet } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 import { languageColor } from '../lib/github.js'
 import { splitTech } from '../lib/portfolioApi.js'
+import { groupByLanguage } from '../lib/codebase.js'
 
 function formatDate(iso) {
   return iso ? new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : ''
@@ -39,7 +40,7 @@ function CodebaseHome() {
     <div className="codebase">
       <h1 className="section-title section-page-title">코드 저장소</h1>
       <p className="lede section-page-lede">
-        프로젝트에 쓴 로직과 공부하며 기록한 코드를 언어별로 모아 둔 곳입니다. 지식을 글로 정리하는 Archive와 달리, 바로 가져다 쓸 수 있는 코드가 중심입니다.
+        프로젝트에 쓴 로직과 공부하며 기록한 코드를 언어별로 모아 둔 곳입니다. 지식을 글로 정리하는 Archive와 달리, 바로 가져다 쓸 수 있는 코드가 중심이며, 언어별로 나누고 용도(재사용 알고리즘·효율적인 코드·짧은 표현)로 묶었습니다.
       </p>
 
       <div className="cb-toolbar">
@@ -75,21 +76,34 @@ function CodebaseHome() {
       {!error && snippets?.length === 0 && <p className="status">아직 등록된 코드가 없습니다.</p>}
       {!error && snippets?.length > 0 && shown.length === 0 && <p className="status">조건에 맞는 코드가 없습니다.</p>}
 
-      <ul className="cb-grid">
-        {shown.map((s) => (
-          <li key={s.id} className="cb-card">
-            <Link to={`/codebase/${s.id}`}>
-              <span className="cb-card-lang"><i style={{ background: languageColor(s.language) }} />{s.language}</span>
-              <h3>{s.title}</h3>
-              {s.description && <p>{s.description}</p>}
-              <span className="cb-card-foot">
-                {splitTech(s.relatedSkills).slice(0, 3).map((t) => <span key={t} className="tag">{t}</span>)}
-                <time>{formatDate(s.lastModifiedAt)}</time>
-              </span>
-            </Link>
-          </li>
+      <div className="cb-frames">
+        {groupByLanguage(shown).map(({ language, items, groups }) => (
+          <section key={language} className="cb-frame" aria-labelledby={`cb-lang-${language}`}>
+            <h2 id={`cb-lang-${language}`} className="cb-frame-head">
+              <i style={{ background: languageColor(language) }} />
+              {language} <em>{items.length}</em>
+            </h2>
+            {groups.map(({ category, items: list }) => (
+              <div key={category} className="cb-group">
+                <h3 className="cb-group-title">{category} <em>{list.length}</em></h3>
+                <ul className="cb-list">
+                  {list.map((s) => (
+                    <li key={s.id}>
+                      <Link to={`/codebase/${s.id}`} className="cb-row">
+                        <span className="cb-row-main">
+                          <strong>{s.title}</strong>
+                          {s.description && <span>{s.description}</span>}
+                        </span>
+                        <time>{formatDate(s.lastModifiedAt)}</time>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </section>
         ))}
-      </ul>
+      </div>
     </div>
   )
 }

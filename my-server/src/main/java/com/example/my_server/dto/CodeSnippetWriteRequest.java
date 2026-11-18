@@ -14,6 +14,9 @@ public record CodeSnippetWriteRequest(
         @Size(max = 30, message = "언어는 30자를 넘을 수 없습니다.")
         String language,
 
+        @Size(max = 30, message = "용도는 30자를 넘을 수 없습니다.")
+        String category,
+
         @Size(max = 300, message = "설명은 300자를 넘을 수 없습니다.")
         String description,
 
@@ -30,6 +33,7 @@ public record CodeSnippetWriteRequest(
         CodeSnippet snippet = new CodeSnippet();
         snippet.setTitle(title.trim());
         snippet.setLanguage(language.trim());
+        snippet.setCategory(category == null || category.isBlank() ? null : category.trim());
         snippet.setDescription(description == null || description.isBlank() ? null : description.trim());
         snippet.setContent(content);
         snippet.setRelatedSkills(RelationLists.normalize(relatedSkills, false));
