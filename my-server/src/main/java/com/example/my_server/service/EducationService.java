@@ -14,12 +14,19 @@ public interface EducationService
     Education update(Long id, Education updated);
     void delete(Long id);
 
-    // 수료증 PDF 업로드 — 기존 파일이 있으면 교체(이전 파일은 디스크에서 삭제)한다.
+    // 수료증 업로드(PDF 또는 JPG/PNG/WebP) — 기존 파일이 있으면 교체(이전 파일은 디스크에서 삭제)한다.
     Education storeCertificateFile(Long id, MultipartFile file);
 
     // 수료증 파일만 삭제 (교육 메타데이터는 남긴다)
     Education deleteCertificateFile(Long id);
 
-    // 저장된 PDF를 읽어 응답으로 내려주기 위한 리소스
+    // 저장된 수료증을 읽어 응답으로 내려주기 위한 리소스
     Resource loadCertificateFile(Long id);
+
+    // 포스터 이미지(JPG/PNG/WebP) — 수료증과 같은 방식, 교육 1개당 1장
+    Education storePosterFile(Long id, MultipartFile file);
+
+    Education deletePosterFile(Long id);
+
+    Resource loadPosterFile(Long id);
 }

@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * 수료한 교육 REST API. 조회(GET)는 누구나, 쓰기(등록/수정/삭제/파일 업로드)는 관리자만 (SecurityConfig 참고).
- * 수료증 PDF는 자격증과 같이 /{id}/certificate 로 메타데이터(JSON)와 분리했다.
+ * 수료증(PDF 또는 이미지)은 /{id}/certificate, 포스터 이미지는 /{id}/poster 로 메타데이터(JSON)와 분리했다.
  */
 @RestController
 @RequestMapping("/api/educations")
@@ -72,20 +72,41 @@ public class ApiEducationController {
         return EducationDetailResponse.from(educationService.deleteCertificateFile(id));
     }
 
-    // 조회는 permitAll — 포트폴리오 공개 전시 목적이므로 수료증도 공개 열람 대상.
+    // 조회는 permitAll — 포트폴리오 공개 전시 목적이므로 수료증·포스터도 공개 열람 대상.
     @GetMapping("/{id}/certificate")
     public ResponseEntity<Resource> viewCertificate(@PathVariable Long id) {
         Education education = educationService.findById(id);
         Resource resource = educationService.loadCertificateFile(id);
+        return fileResponse(resource, education.getCertificateContentType(),
+                education.getCertificateOriginalName(), "certificate");
+    }
 
-        String originalName = education.getCertificateOriginalName() != null
-                ? education.getCertificateOriginalName()
-                : "certificate.pdf";
-        String encodedName = URLEncoder.encode(originalName, StandardCharsets.UTF_8).replace("+", "%20");
+    @PostMapping("/{id}/poster")
+    public EducationDetailResponse uploadPoster(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        return EducationDetailResponse.from(educationService.storePosterFile(id, file));
+    }
 
+    @DeleteMapping("/{id}/poster")
+    public EducationDetailResponse deletePoster(@PathVariable Long id) {
+        return EducationDetailResponse.from(educationService.deletePosterFile(id));
+    }
+
+    @GetMapping("/{id}/poster")
+    public ResponseEntity<Resource> viewPoster(@PathVariable Long id) {
+        Education education = educationService.findById(id);
+        Resource resource = educationService.loadPosterFile(id);
+        return fileResponse(resource, education.getPosterContentType(),
+                education.getPosterOriginalName(), "poster");
+    }
+
+    private ResponseEntity<Resource> fileResponse(Resource resource, String contentType, String originalName, String fallbackName) {
+        MediaType mediaType = contentType != null ? MediaType.parseMediaType(contentType) : MediaType.APPLICATION_PDF;
+        String name = originalName != null ? originalName : fallbackName;
+        String encodedName = URLEncoder.encode(name, StandardCharsets.UTF_8).replace("+", "%20");
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_PDF)
+                .contentType(mediaType)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedName)
+                .header("X-Content-Type-Options", "nosniff")
                 .body(resource);
     }
 }

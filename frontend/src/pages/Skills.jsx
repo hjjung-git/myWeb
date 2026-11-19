@@ -184,7 +184,7 @@ function Skills({ full = false }) {
                   <li key={sn.id}>
                     <Link to={`/codebase/${sn.id}`}>
                       <span className="skill-project-title">{sn.title}</span>
-                      <span className="skill-project-summary">{[sn.language, sn.description].filter(Boolean).join(' · ')}</span>
+                      <span className="skill-project-summary">{[(sn.languages ?? []).join(', '), sn.description].filter(Boolean).join(' · ')}</span>
                     </Link>
                   </li>
                 ))}

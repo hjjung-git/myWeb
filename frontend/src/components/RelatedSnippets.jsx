@@ -20,7 +20,7 @@ function RelatedSnippets({ projectId }) {
           <li key={s.id}>
             <Link to={`/codebase/${s.id}`}>
               <span className="related-post-title">{s.title}</span>
-              <span className="related-post-path">{[s.language, s.description].filter(Boolean).join(' · ')}</span>
+              <span className="related-post-path">{[(s.languages ?? []).join(', '), s.description].filter(Boolean).join(' · ')}</span>
             </Link>
           </li>
         ))}

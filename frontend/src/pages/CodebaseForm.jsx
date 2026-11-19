@@ -8,7 +8,9 @@ import { SKILL_GROUPS } from '../lib/skillsData.js'
 import { COMMON_LANGUAGES, CODE_CATEGORIES } from '../lib/codebase.js'
 import { fetchPortfolioChoices, splitTech } from '../lib/portfolioApi.js'
 
-// Codebase 글 작성/수정 폼 — Archive 글 작성과 같은 마크다운 편집기. 코드는 ```언어 ``` 블록으로 넣는다.
+// Codebase 글 작성/수정 폼 — Archive 글 작성과 같은 마크다운 편집기. 한 글에 여러 언어의 코드를 넣을 수 있고(언어마다 편집기 하나),
+// 코드는 ```언어 ``` 블록으로 넣는다.
+let nextKey = 1
 function CodebaseForm() {
   const { id } = useParams()
   const isEdit = Boolean(id)
@@ -16,10 +18,9 @@ function CodebaseForm() {
   const { isAdmin, loading } = useAuth()
 
   const [title, setTitle] = useState('')
-  const [language, setLanguage] = useState('')
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
-  const [content, setContent] = useState('')
+  const [variants, setVariants] = useState(() => [{ key: nextKey++, language: '', content: '' }])
   const [relatedSkills, setRelatedSkills] = useState([])
   const [relatedProjectIds, setRelatedProjectIds] = useState([])
   const [choices, setChoices] = useState([])
@@ -33,10 +34,9 @@ function CodebaseForm() {
     apiGet(`/api/snippets/${id}`)
       .then((s) => {
         setTitle(s.title)
-        setLanguage(s.language)
         setCategory(s.category ?? '')
         setDescription(s.description ?? '')
-        setContent(s.content)
+        setVariants((s.variants?.length ? s.variants : [{ language: '', content: '' }]).map((v) => ({ key: nextKey++, language: v.language, content: v.content })))
         setRelatedSkills(splitTech(s.relatedSkills))
         setRelatedProjectIds(splitTech(s.relatedProjectIds))
         setReady(true)
@@ -49,12 +49,16 @@ function CodebaseForm() {
     apiGet('/api/snippets').then(setExisting).catch(() => setExisting([]))
   }, [])
 
-  const languageOptions = [...new Set([...COMMON_LANGUAGES, ...existing.map((s) => s.language)])]
+  const languageOptions = [...new Set([...COMMON_LANGUAGES, ...existing.flatMap((s) => s.languages ?? [])])]
   const categoryOptions = [...new Set([...CODE_CATEGORIES, ...existing.map((s) => s.category).filter(Boolean)])]
   const skillOptions = [...new Set(SKILL_GROUPS.flatMap((g) => g.tags))].map((t) => ({ value: t, label: t }))
 
   if (!loading && !isAdmin) return <p className="status status-error">관리자 모드에서만 사용할 수 있습니다.</p>
   if (!ready) return <p className="status">불러오는 중...</p>
+
+  const updateVariant = (key, patch) => setVariants((list) => list.map((v) => (v.key === key ? { ...v, ...patch } : v)))
+  const addVariant = () => setVariants((list) => [...list, { key: nextKey++, language: '', content: '' }])
+  const removeVariant = (key) => setVariants((list) => (list.length > 1 ? list.filter((v) => v.key !== key) : list))
 
   async function uploadImage(file) {
     const formData = new FormData()
@@ -65,14 +69,22 @@ function CodebaseForm() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
+    const names = variants.map((v) => v.language.trim().toLowerCase())
+    if (variants.some((v) => !v.language.trim() || !v.content.trim())) {
+      setError('모든 언어 칸에 언어 이름과 내용을 채워 주세요.')
+      return
+    }
+    if (new Set(names).size !== names.length) {
+      setError('같은 언어가 두 번 들어 있습니다.')
+      return
+    }
     setSubmitting(true)
     try {
       const payload = {
         title,
-        language,
         category,
         description,
-        content,
+        variants: variants.map((v) => ({ language: v.language.trim(), content: v.content })),
         relatedSkills: relatedSkills.join(','),
         relatedProjectIds: relatedProjectIds.join(','),
       }
@@ -91,19 +103,10 @@ function CodebaseForm() {
     <form className="portfolio-form" onSubmit={handleSubmit} style={{ maxWidth: '820px' }}>
       <h1>{isEdit ? '코드 수정' : '새 코드'}</h1>
 
-      <div className="form-row">
-        <label>
-          제목
-          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} required />
-        </label>
-        <label>
-          언어
-          <input value={language} onChange={(e) => setLanguage(e.target.value)} maxLength={30} list="codebase-language-options" required />
-          <datalist id="codebase-language-options">
-            {languageOptions.map((name) => <option key={name} value={name} />)}
-          </datalist>
-        </label>
-      </div>
+      <label>
+        제목
+        <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} required />
+      </label>
 
       <label>
         용도 (선택 — 언어 안에서 묶는 소제목)
@@ -127,16 +130,37 @@ function CodebaseForm() {
         empty="등록된 프로젝트·경력이 없습니다."
       />
 
+      <datalist id="codebase-language-options">
+        {languageOptions.map((name) => <option key={name} value={name} />)}
+      </datalist>
       <div className="form-field">
-        내용 (Markdown — 코드는 ```언어 블록으로 넣으세요)
-        <MarkdownLiveEditor
-          key={id || 'new'}
-          initialValue={content}
-          onChange={setContent}
-          placeholder={'설명을 쓰고, 코드는 ```java … ``` 처럼 블록으로 넣으면 돼요'}
-          onUploadImage={uploadImage}
-          onUploadError={(message) => setError(`이미지 업로드 실패: ${message}`)}
-        />
+        언어별 코드 (Markdown — 같은 내용을 다른 언어로도 쓰려면 아래에서 언어를 추가하세요)
+        {variants.map((v, i) => (
+          <fieldset key={v.key} className="cb-variant">
+            <div className="cb-variant-head">
+              <input
+                value={v.language}
+                onChange={(e) => updateVariant(v.key, { language: e.target.value })}
+                maxLength={30}
+                list="codebase-language-options"
+                placeholder={`언어 ${i + 1} (예: Python)`}
+                aria-label={`언어 ${i + 1}`}
+              />
+              {variants.length > 1 && (
+                <button type="button" className="btn-secondary" onClick={() => removeVariant(v.key)}>이 언어 삭제</button>
+              )}
+            </div>
+            <MarkdownLiveEditor
+              key={`${id || 'new'}-${v.key}`}
+              initialValue={v.content}
+              onChange={(val) => updateVariant(v.key, { content: val })}
+              placeholder={'설명을 쓰고, 코드는 ```언어 … ``` 처럼 블록으로 넣으면 돼요'}
+              onUploadImage={uploadImage}
+              onUploadError={(message) => setError(`이미지 업로드 실패: ${message}`)}
+            />
+          </fieldset>
+        ))}
+        <button type="button" className="btn-secondary cb-add-variant" onClick={addVariant}>+ 언어 추가</button>
       </div>
 
       {error && <p className="form-error">{error}</p>}

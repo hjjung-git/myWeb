@@ -8,7 +8,8 @@ import Sidenote from '../components/Sidenote.jsx'
 import SidenoteLayout from '../components/SidenoteLayout.jsx'
 import { apiGet, apiMutate, resolveImageSrc } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
-import MermaidBlock from '../components/MermaidBlock.jsx'
+import CodeBlock from '../components/CodeBlock.jsx'
+import { rehypePlugins } from '../lib/markdownConfig.js'
 import PostRelations from '../components/PostRelations.jsx'
 
 function formatDate(iso) {
@@ -80,20 +81,13 @@ function ArchiveDetail() {
       <div className="portfolio-body markdown-body">
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkSidenotes, remarkSpacing]}
+          rehypePlugins={rehypePlugins}
           components={{
             sidenote: Sidenote, // 각주 문법 → 우측 여백 메모(용어 설명)
             // 서버에 올린 이미지(/api/images/..)는 배포 환경에서도 열리도록 절대 주소로 바꿔서 보여준다.
             img: ({ src = '', alt = '' }) => <img src={resolveImageSrc(src)} alt={alt} loading="lazy" />,
-            // ```mermaid 코드 블록은 코드 대신 그림으로 그린다. 나머지 코드 블록은 그대로.
-            pre: ({ node, children, ...rest }) => {
-              const codeEl = node?.children?.[0]
-              const classes = codeEl?.properties?.className || []
-              if (codeEl?.tagName === 'code' && classes.includes('language-mermaid')) {
-                const text = (codeEl.children || []).map((child) => child.value || '').join('')
-                return <MermaidBlock code={text.trim()} />
-              }
-              return <pre {...rest}>{children}</pre>
-            },
+            // ```mermaid는 그림으로, 나머지 코드 블록은 문법 강조 + 복사 버튼
+            pre: CodeBlock,
           }}
         >
           {post.content}

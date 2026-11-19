@@ -47,9 +47,8 @@ public class CodeSnippetServiceImpl implements CodeSnippetService
     {
         CodeSnippet existing = findById(id);
         existing.setTitle(updated.getTitle());
-        existing.setLanguage(updated.getLanguage());
         existing.setDescription(updated.getDescription());
-        existing.setContent(updated.getContent());
+        existing.replaceVariants(updated.getVariants());
         existing.setCategory(updated.getCategory());
         existing.setRelatedSkills(updated.getRelatedSkills());
         existing.setRelatedProjectIds(updated.getRelatedProjectIds());

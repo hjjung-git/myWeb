@@ -9,6 +9,7 @@ public record EducationSummaryResponse(
         String institution,
         String periodText,
         boolean hasCertificateFile,
+        boolean hasPoster,
         boolean hasProjectUrl
 ) {
     public static EducationSummaryResponse from(Education education) {
@@ -18,6 +19,7 @@ public record EducationSummaryResponse(
                 education.getInstitution(),
                 education.getPeriodText(),
                 education.getCertificateStoredName() != null,
+                education.getPosterStoredName() != null,
                 education.getProjectUrl() != null && !education.getProjectUrl().isBlank()
         );
     }

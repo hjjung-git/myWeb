@@ -4,7 +4,7 @@ import { apiGet } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 import { languageColor } from '../lib/github.js'
 import { splitTech } from '../lib/portfolioApi.js'
-import { groupByLanguage } from '../lib/codebase.js'
+import { groupByCategory, languageCounts, languagesOf } from '../lib/codebase.js'
 
 function formatDate(iso) {
   return iso ? new Date(iso).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : ''
@@ -23,31 +23,33 @@ function CodebaseHome() {
     apiGet('/api/snippets').then(setSnippets).catch((err) => setError(err.message))
   }, [])
 
-  const languages = useMemo(() => {
-    const count = new Map()
-    snippets?.forEach((s) => count.set(s.language, (count.get(s.language) ?? 0) + 1))
-    return [...count.entries()].sort((a, b) => b[1] - a[1])
-  }, [snippets])
+  const languages = useMemo(() => languageCounts(snippets ?? []), [snippets])
 
   const q = query.trim().toLowerCase()
+  // 언어 버튼을 누르거나, 검색어가 언어 이름과 정확히 같으면 그 언어로 보는 중이다.
+  // 이 경우 글에서 그 언어의 코드만 보여 주고(다른 언어는 안 보임), 글은 한 번만 나온다.
+  const activeLang = lang || languages.find(([name]) => name.toLowerCase() === q)?.[0] || ''
   const shown = (snippets ?? []).filter(
     (s) =>
-      (!lang || s.language === lang) &&
-      (!q || `${s.title} ${s.description ?? ''} ${s.relatedSkills ?? ''}`.toLowerCase().includes(q)),
+      (!lang || languagesOf(s).includes(lang)) &&
+      (!q ||
+        `${s.title} ${s.description ?? ''} ${s.category ?? ''} ${s.relatedSkills ?? ''} ${languagesOf(s).join(' ')}`
+          .toLowerCase()
+          .includes(q)),
   )
 
   return (
     <div className="codebase">
       <h1 className="section-title section-page-title">코드 저장소</h1>
       <p className="lede section-page-lede">
-        프로젝트에 쓴 로직과 공부하며 기록한 코드를 언어별로 모아 둔 곳입니다. 지식을 글로 정리하는 Archive와 달리, 바로 가져다 쓸 수 있는 코드가 중심이며, 언어별로 나누고 용도(재사용 알고리즘·효율적인 코드·짧은 표현)로 묶었습니다.
+        프로젝트에 쓴 로직과 공부하며 기록한 코드를 모아 둔 곳입니다. 지식을 글로 정리하는 Archive와 달리, 바로 가져다 쓸 수 있는 코드가 중심이며, 용도(재사용 알고리즘·효율적인 코드·짧은 표현)로 묶었습니다. 한 글에 여러 언어의 코드가 들어 있고, 언어를 고르면 그 언어의 코드만 보입니다.
       </p>
 
       <div className="cb-toolbar">
         <input
           type="search"
           className="cb-search"
-          placeholder="제목·설명·기술로 검색"
+          placeholder="제목·설명·언어·기술로 검색"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           aria-label="코드 검색"
@@ -77,30 +79,33 @@ function CodebaseHome() {
       {!error && snippets?.length > 0 && shown.length === 0 && <p className="status">조건에 맞는 코드가 없습니다.</p>}
 
       <div className="cb-frames">
-        {groupByLanguage(shown).map(({ language, items, groups }) => (
-          <section key={language} className="cb-frame" aria-labelledby={`cb-lang-${language}`}>
-            <h2 id={`cb-lang-${language}`} className="cb-frame-head">
-              <i style={{ background: languageColor(language) }} />
-              {language} <em>{items.length}</em>
+        {groupByCategory(shown).map(({ category, items }) => (
+          <section key={category} className="cb-frame" aria-labelledby={`cb-cat-${category}`}>
+            <h2 id={`cb-cat-${category}`} className="cb-frame-head">
+              {category} <em>{items.length}</em>
             </h2>
-            {groups.map(({ category, items: list }) => (
-              <div key={category} className="cb-group">
-                <h3 className="cb-group-title">{category} <em>{list.length}</em></h3>
-                <ul className="cb-list">
-                  {list.map((s) => (
-                    <li key={s.id}>
-                      <Link to={`/codebase/${s.id}`} className="cb-row">
-                        <span className="cb-row-main">
-                          <strong>{s.title}</strong>
-                          {s.description && <span>{s.description}</span>}
-                        </span>
-                        <time>{formatDate(s.lastModifiedAt)}</time>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            <ul className="cb-list">
+              {items.map((s) => {
+                const here = activeLang && languagesOf(s).includes(activeLang) ? activeLang : ''
+                const badges = here ? [here] : languagesOf(s)
+                return (
+                  <li key={s.id}>
+                    <Link to={here ? `/codebase/${s.id}?lang=${encodeURIComponent(here)}` : `/codebase/${s.id}`} className="cb-row">
+                      <span className="cb-row-main">
+                        <strong>{s.title}</strong>
+                        {s.description && <span>{s.description}</span>}
+                      </span>
+                      <span className="cb-badges">
+                        {badges.map((l) => (
+                          <span key={l} className="cb-badge"><i style={{ background: languageColor(l) }} />{l}</span>
+                        ))}
+                      </span>
+                      <time>{formatDate(s.lastModifiedAt)}</time>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
           </section>
         ))}
       </div>

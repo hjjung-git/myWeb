@@ -11,6 +11,9 @@ public record EducationDetailResponse(
         String projectUrl,
         String certificateOriginalName,
         boolean hasCertificateFile,
+        String certificateContentType,
+        boolean hasPoster,
+        String posterOriginalName,
         Integer displayOrder
 ) {
     public static EducationDetailResponse from(Education education) {
@@ -23,6 +26,9 @@ public record EducationDetailResponse(
                 education.getProjectUrl(),
                 education.getCertificateOriginalName(),
                 education.getCertificateStoredName() != null,
+                education.getCertificateContentType(),
+                education.getPosterStoredName() != null,
+                education.getPosterOriginalName(),
                 education.getDisplayOrder()
         );
     }

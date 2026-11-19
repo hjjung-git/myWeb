@@ -1,23 +1,27 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiGet, apiMutate, apiUpload, apiResourceUrl } from '../lib/api.js'
 import { useAuth } from '../lib/AuthContext.jsx'
 import BackButton from '../components/BackButton.jsx'
 
-// 교육 상세 페이지 — 배운 내용, 결과물(프로젝트 링크), 수료증(PDF)을 확인할 수 있다.
-// 수료증 PDF는 /api/educations/{id}/certificate에서 직접 스트리밍해주므로 <object>로 그대로 띄운다.
-// 업로드/삭제는 관리자 모드에서만 이 페이지에서 바로 처리한다(자격증 상세와 같은 방식).
+// 교육 상세 페이지 — 포스터 이미지, 배운 내용, 결과물(프로젝트 링크), 수료증(PDF 또는 이미지)을 확인할 수 있다.
+// 포스터는 /api/educations/{id}/poster, 수료증은 /api/educations/{id}/certificate 에서 직접 내려받는다.
+// 수료증이 PDF면 <object>로, 이미지면 <img>로 띄운다. 업로드/삭제는 관리자 모드에서만 이 페이지에서 처리한다.
+const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp'
+const CERT_ACCEPT = `application/pdf,${IMAGE_ACCEPT}`
+
 function EducationDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { isAdmin } = useAuth()
-  const fileInputRef = useRef(null)
 
   const [edu, setEdu] = useState(null)
   const [error, setError] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState(null)
+  // 같은 주소로 파일을 교체해도 브라우저 캐시 때문에 옛 파일이 보이지 않도록 업로드마다 바꾼다
+  const [version, setVersion] = useState(0)
 
   function load() {
     return apiGet(`/api/educations/${id}`)
@@ -42,7 +46,8 @@ function EducationDetail() {
     }
   }
 
-  async function handleFileChange(e) {
+  // kind: 'certificate' | 'poster'
+  async function handleFileChange(kind, e) {
     const file = e.target.files?.[0]
     if (!file) return
     setUploadError(null)
@@ -50,8 +55,9 @@ function EducationDetail() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const updated = await apiUpload(`/api/educations/${id}/certificate`, 'POST', formData)
+      const updated = await apiUpload(`/api/educations/${id}/${kind}`, 'POST', formData)
       setEdu(updated)
+      setVersion((v) => v + 1)
     } catch (err) {
       setUploadError(err.message)
     } finally {
@@ -60,12 +66,13 @@ function EducationDetail() {
     }
   }
 
-  async function handleFileDelete() {
+  async function handleFileDelete(kind) {
     setUploadError(null)
     setUploading(true)
     try {
-      const updated = await apiMutate(`/api/educations/${id}/certificate`, 'DELETE')
+      const updated = await apiMutate(`/api/educations/${id}/${kind}`, 'DELETE')
       setEdu(updated)
+      setVersion((v) => v + 1)
     } catch (err) {
       setUploadError(err.message)
     } finally {
@@ -81,7 +88,9 @@ function EducationDetail() {
     return <p className="status">불러오는 중...</p>
   }
 
-  const fileUrl = apiResourceUrl(`/api/educations/${id}/certificate`)
+  const certUrl = `${apiResourceUrl(`/api/educations/${id}/certificate`)}?v=${version}`
+  const posterUrl = `${apiResourceUrl(`/api/educations/${id}/poster`)}?v=${version}`
+  const certIsPdf = (edu.certificateContentType ?? 'application/pdf') === 'application/pdf'
 
   return (
     <article className="portfolio-detail" style={{ padding: 'clamp(28px, 5vw, 44px) 0' }}>
@@ -101,6 +110,31 @@ function EducationDetail() {
       {edu.institution && <p className="portfolio-period">{edu.institution}</p>}
       {edu.periodText && <p className="portfolio-period">{edu.periodText}</p>}
 
+      {(edu.hasPoster || isAdmin) && (
+        <div className="edu-poster-box">
+          {edu.hasPoster ? (
+            <a href={posterUrl} target="_blank" rel="noreferrer" title="원본 크기로 보기">
+              <img src={posterUrl} alt={`${edu.name} 포스터`} className="edu-poster" />
+            </a>
+          ) : (
+            <p className="status">아직 등록된 포스터가 없습니다.</p>
+          )}
+          {isAdmin && (
+            <div className="cert-upload-row">
+              <label className="upload-label">
+                포스터 {edu.hasPoster ? '교체' : '업로드'} (JPG·PNG·WebP)
+                <input type="file" accept={IMAGE_ACCEPT} onChange={(e) => handleFileChange('poster', e)} disabled={uploading} />
+              </label>
+              {edu.hasPoster && (
+                <button type="button" className="btn-danger" onClick={() => handleFileDelete('poster')} disabled={uploading}>
+                  포스터 삭제
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {edu.description && (
         <div className="portfolio-body" style={{ whiteSpace: 'pre-wrap' }}>{edu.description}</div>
       )}
@@ -114,17 +148,24 @@ function EducationDetail() {
       )}
 
       <div className="cert-file-box">
+        <h2 className="cert-file-title">수료증</h2>
         {edu.hasCertificateFile ? (
           <>
-            <object data={fileUrl} type="application/pdf" className="cert-pdf-viewer">
-              <p className="status">
-                이 브라우저에서는 PDF를 바로 볼 수 없습니다. <a href={fileUrl} target="_blank" rel="noreferrer">여기서 열기</a>
-              </p>
-            </object>
+            {certIsPdf ? (
+              <object data={certUrl} type="application/pdf" className="cert-pdf-viewer">
+                <p className="status">
+                  이 브라우저에서는 PDF를 바로 볼 수 없습니다. <a href={certUrl} target="_blank" rel="noreferrer">여기서 열기</a>
+                </p>
+              </object>
+            ) : (
+              <a href={certUrl} target="_blank" rel="noreferrer" title="원본 크기로 보기">
+                <img src={certUrl} alt={`${edu.name} 수료증`} className="cert-image" />
+              </a>
+            )}
             <div className="cert-file-actions">
-              <a href={fileUrl} target="_blank" rel="noreferrer" className="btn-secondary">새 탭에서 열기</a>
+              <a href={certUrl} target="_blank" rel="noreferrer" className="btn-secondary">새 탭에서 열기</a>
               {isAdmin && (
-                <button type="button" className="btn-danger" onClick={handleFileDelete} disabled={uploading}>
+                <button type="button" className="btn-danger" onClick={() => handleFileDelete('certificate')} disabled={uploading}>
                   수료증 삭제
                 </button>
               )}
@@ -136,13 +177,10 @@ function EducationDetail() {
 
         {isAdmin && (
           <div className="cert-upload-row">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/pdf"
-              onChange={handleFileChange}
-              disabled={uploading}
-            />
+            <label className="upload-label">
+              수료증 {edu.hasCertificateFile ? '교체' : '업로드'} (PDF·JPG·PNG·WebP)
+              <input type="file" accept={CERT_ACCEPT} onChange={(e) => handleFileChange('certificate', e)} disabled={uploading} />
+            </label>
             {uploading && <span className="status">업로드 중...</span>}
           </div>
         )}
