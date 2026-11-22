@@ -6,6 +6,8 @@ import { languagesOf } from '../lib/codebase.js'
 import { languageInQuery, searchAll } from '../lib/search.js'
 import ArchiveMark from '../components/ArchiveMark.jsx'
 import GraphAdminPanel from '../components/GraphAdminPanel.jsx'
+import ChatThread from '../components/ChatThread.jsx'
+import { useArchiveChat } from '../lib/useArchiveChat.js'
 
 const MAX_PER_GROUP = 5
 
@@ -20,7 +22,11 @@ function ArchiveHome() {
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const [expanded, setExpanded] = useState({}) // 묶음별 '더 보기'로 펼침
-  const found = useMemo(() => searchAll(query, posts, snippets), [query, posts, snippets])
+  // AI 질문(Hybrid RAG) — 서버가 '쓸 수 있음'이라고 할 때만 '검색 | AI 질문' 전환이 보인다
+  const chat = useArchiveChat()
+  const [mode, setMode] = useState('search')
+  const asking = mode === 'ask'
+  const found = useMemo(() => (asking ? null : searchAll(query, posts, snippets)), [asking, query, posts, snippets])
 
   // 화면에 보이는 결과(묶음마다 최대 5개)를 한 줄로 펼쳐 ↑↓·Enter가 두 묶음을 이어서 움직이게 한다.
   const groups = useMemo(() => {
@@ -58,6 +64,11 @@ function ArchiveHome() {
     setExpanded({})
   }, [query])
 
+  // 답변이 끝나면 다시 입력할 수 있게 입력칸으로
+  useEffect(() => {
+    if (asking && !chat.asking) inputRef.current?.focus()
+  }, [asking, chat.asking])
+
   // "/" 를 누르면 검색창으로 (다른 입력칸에 쓰는 중이면 무시)
   useEffect(() => {
     const onKey = (e) => {
@@ -72,6 +83,15 @@ function ArchiveHome() {
   }, [])
 
   const onInputKey = (e) => {
+    if (asking) {
+      if (e.key === 'Enter' && !e.nativeEvent.isComposing && query.trim()) {
+        e.preventDefault()
+        chat.ask(query)
+        setQuery('')
+      }
+      if (e.key === 'Escape') setQuery('')
+      return
+    }
     if (e.key === 'Escape') setQuery('')
     if (flat.length === 0) return
     if (e.key === 'ArrowDown') {
@@ -90,6 +110,29 @@ function ArchiveHome() {
     <section className="archive-home">
       <ArchiveMark />
 
+      {chat.status?.available && (
+        <div className="home-mode" role="tablist" aria-label="검색 방식">
+          {[
+            ['search', '검색'],
+            ['ask', 'AI 질문'],
+          ].map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={mode === key}
+              className={`home-mode-btn${mode === key ? ' is-on' : ''}`}
+              onClick={() => {
+                setMode(key)
+                inputRef.current?.focus()
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="home-searchbox">
         <svg className="home-search-icon" viewBox="0 0 20 20" aria-hidden="true">
           <circle cx="8.5" cy="8.5" r="5.5" />
@@ -102,8 +145,9 @@ function ArchiveHome() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onInputKey}
-          placeholder="글·코드 검색"
-          aria-label="글과 코드 검색"
+          placeholder={asking ? '내 글·코드에 물어보기 (Enter)' : '글·코드 검색'}
+          aria-label={asking ? '내 글과 코드에 AI로 질문' : '글과 코드 검색'}
+          disabled={asking && chat.asking}
           autoComplete="off"
           spellCheck="false"
         />
@@ -162,7 +206,9 @@ function ArchiveHome() {
         </div>
       )}
 
-      {isAdmin && !groups && (
+      {asking && <ChatThread turns={chat.turns} asking={chat.asking} onReset={chat.reset} />}
+
+      {isAdmin && !groups && !(asking && chat.turns.length > 0) && (
         <>
           <div className="home-new-row">
             <Link to="/archive/new" className="home-new">+ 새 글 작성</Link>

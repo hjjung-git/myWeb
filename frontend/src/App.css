@@ -3593,3 +3593,108 @@ html:not([data-reduce-motion]) .sb-fill { animation: sb-grow 0.9s cubic-bezier(0
   opacity: 0.55;
   cursor: default;
 }
+
+/* ---- Archive 홈: 검색 | AI 질문 전환과 대화 ---- */
+.home-mode {
+  display: inline-flex;
+  gap: 2px;
+  margin-bottom: 0.7rem;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.home-mode-btn {
+  padding: 0.3rem 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.home-mode-btn:hover {
+  color: var(--accent-strong);
+}
+.home-mode-btn.is-on {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+.chat-thread {
+  width: 100%;
+  margin-top: 1.2rem;
+  text-align: left;
+}
+.chat-turn + .chat-turn {
+  margin-top: 1.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+}
+.chat-question {
+  margin: 0 0 0.6rem auto;
+  width: fit-content;
+  max-width: 85%;
+  padding: 0.5rem 0.85rem;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+}
+.chat-pending {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+}
+.chat-answer .markdown-body {
+  font-size: 0.95rem;
+}
+.chat-sources {
+  margin: 0.8rem 0 0;
+  padding: 0.6rem 0.8rem 0.6rem 2rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 0.84rem;
+}
+.chat-sources li + li {
+  margin-top: 0.25rem;
+}
+.chat-sources a {
+  color: var(--accent-strong);
+  font-weight: 600;
+  text-decoration: none;
+}
+.chat-sources a:hover {
+  text-decoration: underline;
+}
+.chat-sources span {
+  margin-left: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  color: var(--text-faint);
+}
+.chat-meta {
+  margin: 0.4rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+.chat-reset {
+  display: block;
+  margin: 1.2rem auto 0;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: none;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.chat-reset:hover {
+  color: var(--accent-strong);
+  border-color: var(--accent);
+}

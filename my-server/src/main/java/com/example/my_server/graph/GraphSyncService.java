@@ -1,5 +1,6 @@
 package com.example.my_server.graph;
 
+import com.example.my_server.ai.ChunkSyncService;
 import com.example.my_server.domain.CodeSnippet;
 import com.example.my_server.domain.CodeSnippetVariant;
 import com.example.my_server.domain.PortfolioItem;
@@ -33,6 +34,8 @@ import java.util.stream.Collectors;
  *       (Code)-[:FOR]->(Purpose)               ← 용도(재사용 알고리즘 …)
  *       (Project)-[:USES]->(Skill)             ← 프로젝트 기술 스택
  * Skill에는 '내 숙련도'(level·featured)도 붙는다.
+ * 글·코드는 검색용 조각(Chunk, 임베딩 벡터 포함)으로도 나뉘어 (Chunk)-[:PART_OF]->(Note|Code)로 붙는다(ChunkSyncService).
+ * '전체 다시 맞추기'는 Chunk를 지우지 않는다 — 내용이 그대로인 조각은 다시 임베딩하지 않기 위해서.
  */
 @Service
 public class GraphSyncService
@@ -111,18 +114,22 @@ public class GraphSyncService
             "MATCH (n) WHERE n:Note OR n:Code OR n:Project OR n:Skill OR n:Category OR n:Purpose DETACH DELETE n";
     static final String COUNT_NODES = "MATCH (n) RETURN labels(n)[0] AS name, count(*) AS count ORDER BY name";
     static final String COUNT_RELS = "MATCH ()-[r]->() RETURN type(r) AS name, count(*) AS count ORDER BY name";
+    static final String COUNT_EMBEDDED = "MATCH (c:Chunk) RETURN count(c) AS chunks, count(c.embedding) AS embedded";
 
     private final Neo4jHttpClient neo4j;
     private final PostRepository postRepository;
     private final CodeSnippetRepository codeSnippetRepository;
     private final PortfolioItemRepository portfolioItemRepository;
     private final SkillLevelRepository skillLevelRepository;
+    private final ChunkSyncService chunks;
 
     public GraphSyncService(Neo4jHttpClient neo4j, PostRepository postRepository,
                             CodeSnippetRepository codeSnippetRepository,
                             PortfolioItemRepository portfolioItemRepository,
-                            SkillLevelRepository skillLevelRepository)
+                            SkillLevelRepository skillLevelRepository,
+                            ChunkSyncService chunks)
     {
+        this.chunks = chunks;
         this.neo4j = neo4j;
         this.postRepository = postRepository;
         this.codeSnippetRepository = codeSnippetRepository;
@@ -135,6 +142,7 @@ public class GraphSyncService
     public void ensureSchema()
     {
         SCHEMA.forEach(neo4j::run);
+        chunks.schema().forEach(neo4j::run);
     }
 
     // ---- 한 건씩 반영: MySQL에 있으면 갱신, 없으면(삭제됨) 그래프에서도 지운다 ----
@@ -143,8 +151,14 @@ public class GraphSyncService
     public void syncNote(Long id)
     {
         postRepository.findById(id).ifPresentOrElse(
-                post -> neo4j.run(NOTE_UPSERT, noteParams(post, existingProjectIds())),
-                () -> neo4j.run(DELETE_NOTE, Map.of("id", id)));
+                post -> {
+                    neo4j.run(NOTE_UPSERT, noteParams(post, existingProjectIds()));
+                    chunks.syncNote(post);
+                },
+                () -> {
+                    neo4j.run(DELETE_NOTE, Map.of("id", id));
+                    chunks.deleteNote(id);
+                });
         cleanup();
     }
 
@@ -152,8 +166,14 @@ public class GraphSyncService
     public void syncCode(Long id)
     {
         codeSnippetRepository.findById(id).ifPresentOrElse(
-                code -> neo4j.run(CODE_UPSERT, codeParams(code, existingProjectIds())),
-                () -> neo4j.run(DELETE_CODE, Map.of("id", id)));
+                code -> {
+                    neo4j.run(CODE_UPSERT, codeParams(code, existingProjectIds()));
+                    chunks.syncCode(code);
+                },
+                () -> {
+                    neo4j.run(DELETE_CODE, Map.of("id", id));
+                    chunks.deleteCode(id);
+                });
         cleanup();
     }
 
@@ -203,6 +223,11 @@ public class GraphSyncService
         codes.forEach(code -> neo4j.run(CODE_UPSERT, codeParams(code, projectIds)));
         cleanup();
 
+        // 검색 조각: 내용이 바뀐 조각만 다시 임베딩, 지워진 글·코드의 조각은 정리
+        posts.forEach(chunks::syncNote);
+        codes.forEach(chunks::syncCode);
+        chunks.deleteOrphans();
+
         Map<String, Object> result = new LinkedHashMap<>(status());
         result.put("synced", Map.of("notes", posts.size(), "codes", codes.size(), "projects", items.size()));
         result.put("tookMs", System.currentTimeMillis() - started);
@@ -222,6 +247,10 @@ public class GraphSyncService
         try {
             out.put("nodes", counts(neo4j.run(COUNT_NODES)));
             out.put("relationships", counts(neo4j.run(COUNT_RELS)));
+            neo4j.run(COUNT_EMBEDDED).stream().findFirst().ifPresent(r -> {
+                out.put("chunks", r.get("chunks"));
+                out.put("embedded", r.get("embedded"));
+            });
             out.put("ok", true);
         } catch (GraphException e) {
             out.put("ok", false);
