@@ -4,6 +4,7 @@ import com.example.my_server.domain.Post;
 import com.example.my_server.domain.Role;
 import com.example.my_server.domain.User;
 import com.example.my_server.exception.PostNotFoundException;
+import com.example.my_server.graph.GraphChangedEvent;
 import com.example.my_server.repository.PostRepository;
 import com.example.my_server.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +35,10 @@ class PostServiceTest
 
     @Mock
     private UserRepository userRepository;
+
+    // 저장·수정·삭제 때 그래프(Neo4j) 반영 알림을 보낸다 — 테스트에서는 보냈는지만 확인
+    @Mock
+    private ApplicationEventPublisher events;
 
     @InjectMocks
     private PostServiceImpl postService;
@@ -146,5 +152,6 @@ class PostServiceTest
 
         // then
         verify(postRepository).deleteById(postId);
+        verify(events).publishEvent(GraphChangedEvent.note(postId));
     }
 }

@@ -1,5 +1,8 @@
 package com.example.my_server.service;
 
+import com.example.my_server.graph.GraphChangedEvent;
+import org.springframework.context.ApplicationEventPublisher;
+
 import com.example.my_server.domain.PortfolioItem;
 import com.example.my_server.domain.PortfolioItemType;
 import com.example.my_server.exception.PostNotFoundException;
@@ -15,10 +18,12 @@ import java.util.List;
 public class PortfolioItemServiceImpl implements PortfolioItemService
 {
     private final PortfolioItemRepository portfolioItemRepository;
+    private final ApplicationEventPublisher events; // 그래프(Neo4j) 반영 알림
 
-    public PortfolioItemServiceImpl(PortfolioItemRepository portfolioItemRepository)
+    public PortfolioItemServiceImpl(PortfolioItemRepository portfolioItemRepository, ApplicationEventPublisher events)
     {
         this.portfolioItemRepository = portfolioItemRepository;
+        this.events = events;
     }
 
     @Override
@@ -43,7 +48,9 @@ public class PortfolioItemServiceImpl implements PortfolioItemService
     @Transactional
     public PortfolioItem create(PortfolioItem item)
     {
-        return portfolioItemRepository.save(item);
+        PortfolioItem saved = portfolioItemRepository.save(item);
+        events.publishEvent(GraphChangedEvent.project(saved.getId()));
+        return saved;
     }
 
     @Override
@@ -66,6 +73,7 @@ public class PortfolioItemServiceImpl implements PortfolioItemService
         existing.setResignationReason(updated.getResignationReason());
         existing.setDisplayOrder(updated.getDisplayOrder());
 
+        events.publishEvent(GraphChangedEvent.project(id));
         return existing;
     }
 
@@ -75,5 +83,6 @@ public class PortfolioItemServiceImpl implements PortfolioItemService
     {
         findById(id);
         portfolioItemRepository.deleteById(id);
+        events.publishEvent(GraphChangedEvent.project(id));
     }
 }

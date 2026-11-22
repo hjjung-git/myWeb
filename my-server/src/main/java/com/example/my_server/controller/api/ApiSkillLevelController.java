@@ -3,7 +3,9 @@ package com.example.my_server.controller.api;
 import com.example.my_server.domain.SkillLevel;
 import com.example.my_server.dto.SkillLevelRequest;
 import com.example.my_server.dto.SkillLevelResponse;
+import com.example.my_server.graph.GraphChangedEvent;
 import com.example.my_server.repository.SkillLevelRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,9 +20,11 @@ import java.util.List;
 public class ApiSkillLevelController {
 
     private final SkillLevelRepository skillLevelRepository;
+    private final ApplicationEventPublisher events; // 그래프(Neo4j)의 Skill 노드에 숙련도 반영
 
-    public ApiSkillLevelController(SkillLevelRepository skillLevelRepository) {
+    public ApiSkillLevelController(SkillLevelRepository skillLevelRepository, ApplicationEventPublisher events) {
         this.skillLevelRepository = skillLevelRepository;
+        this.events = events;
     }
 
     @GetMapping
@@ -35,6 +39,7 @@ public class ApiSkillLevelController {
                 .map(r -> new SkillLevel(r.name().trim(), Math.max(0, Math.min(100, r.level())), r.featured()))
                 .toList();
         skillLevelRepository.saveAll(toSave);
+        events.publishEvent(GraphChangedEvent.skills());
         return list();
     }
 }

@@ -1,5 +1,8 @@
 package com.example.my_server.service;
 
+import com.example.my_server.graph.GraphChangedEvent;
+import org.springframework.context.ApplicationEventPublisher;
+
 import com.example.my_server.domain.Post;
 import com.example.my_server.domain.Role;
 import com.example.my_server.domain.User;
@@ -23,11 +26,13 @@ public class PostServiceImpl implements PostService
 {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher events; // 저장·수정·삭제를 그래프(Neo4j)에 알린다(커밋 후 반영)
 
-    public PostServiceImpl(PostRepository postRepository, UserRepository userRepository)
+    public PostServiceImpl(PostRepository postRepository, UserRepository userRepository, ApplicationEventPublisher events)
     {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
+        this.events = events;
     }
 
     @Override
@@ -75,7 +80,9 @@ public class PostServiceImpl implements PostService
         post.setUser(user);
         post.setUsername(user.getNickname());
 
-        return postRepository.save(post).getId();
+        Long id = postRepository.save(post).getId();
+        events.publishEvent(GraphChangedEvent.note(id));
+        return id;
     }
 
     // 현재 로그인한 사용자의 loginId 반환
@@ -123,6 +130,7 @@ public class PostServiceImpl implements PostService
         existingPost.setRelatedSkills(updatedPost.getRelatedSkills());
         existingPost.setRelatedProjectIds(updatedPost.getRelatedProjectIds());
 
+        events.publishEvent(GraphChangedEvent.note(id));
         return existingPost;
     }
 
@@ -134,5 +142,6 @@ public class PostServiceImpl implements PostService
         Post post = findById(id);
         validateOwner(post);
         postRepository.deleteById(id);
+        events.publishEvent(GraphChangedEvent.note(id));
     }
 }

@@ -89,6 +89,8 @@ public class SecurityConfig
                         .requestMatchers(HttpMethod.POST, "/api/images/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/images/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/images/**").hasRole("ADMIN")
+                        // 지식 그래프(Neo4j) 상태·재동기화: 관리자만
+                        .requestMatchers("/api/graph/**").hasRole("ADMIN")
                         .requestMatchers("/api/**", "/h2-console/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

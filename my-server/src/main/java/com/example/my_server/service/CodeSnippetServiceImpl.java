@@ -1,5 +1,8 @@
 package com.example.my_server.service;
 
+import com.example.my_server.graph.GraphChangedEvent;
+import org.springframework.context.ApplicationEventPublisher;
+
 import com.example.my_server.domain.CodeSnippet;
 import com.example.my_server.exception.PostNotFoundException;
 import com.example.my_server.repository.CodeSnippetRepository;
@@ -14,10 +17,12 @@ import java.util.List;
 public class CodeSnippetServiceImpl implements CodeSnippetService
 {
     private final CodeSnippetRepository codeSnippetRepository;
+    private final ApplicationEventPublisher events; // 그래프(Neo4j) 반영 알림
 
-    public CodeSnippetServiceImpl(CodeSnippetRepository codeSnippetRepository)
+    public CodeSnippetServiceImpl(CodeSnippetRepository codeSnippetRepository, ApplicationEventPublisher events)
     {
         this.codeSnippetRepository = codeSnippetRepository;
+        this.events = events;
     }
 
     @Override
@@ -38,7 +43,9 @@ public class CodeSnippetServiceImpl implements CodeSnippetService
     @Transactional
     public CodeSnippet create(CodeSnippet snippet)
     {
-        return codeSnippetRepository.save(snippet);
+        CodeSnippet saved = codeSnippetRepository.save(snippet);
+        events.publishEvent(GraphChangedEvent.code(saved.getId()));
+        return saved;
     }
 
     @Override
@@ -52,6 +59,7 @@ public class CodeSnippetServiceImpl implements CodeSnippetService
         existing.setCategory(updated.getCategory());
         existing.setRelatedSkills(updated.getRelatedSkills());
         existing.setRelatedProjectIds(updated.getRelatedProjectIds());
+        events.publishEvent(GraphChangedEvent.code(id));
         return existing;
     }
 
@@ -61,5 +69,6 @@ public class CodeSnippetServiceImpl implements CodeSnippetService
     {
         findById(id);
         codeSnippetRepository.deleteById(id);
+        events.publishEvent(GraphChangedEvent.code(id));
     }
 }
