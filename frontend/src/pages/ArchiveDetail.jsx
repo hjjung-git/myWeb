@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
+import BackButton from '../components/BackButton.jsx'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkSpacing from '../lib/remarkSpacing.js'
@@ -58,8 +59,10 @@ function ArchiveDetail() {
 
   return (
     <article className="portfolio-detail archive-article">
+      <BackButton to="/archive" label="Archive 홈으로 돌아가기" />
       <p className="archive-breadcrumb">
         <Link to="/archive" state={{ restoreScroll: true }}>Archive</Link>
+        {' › '}Notes
         {crumbs.map((name, i) => (
           <span key={i}>{' › '}{name}</span>
         ))}

@@ -32,7 +32,7 @@ function CodebaseDetail() {
     setDeleting(true)
     try {
       await apiMutate(`/api/snippets/${id}`, 'DELETE')
-      navigate('/codebase')
+      navigate('/archive')
     } catch (err) {
       setError(err.message)
       setDeleting(false)
@@ -50,7 +50,11 @@ function CodebaseDetail() {
 
   return (
     <article className="portfolio-detail codebase-detail">
-      <BackButton to="/codebase" label="Codebase 목록으로 돌아가기" />
+      <BackButton to="/archive" label="Archive 홈으로 돌아가기" />
+      <p className="archive-breadcrumb">
+        <Link to="/archive" state={{ restoreScroll: true }}>Archive</Link>
+        {' › '}Codebase{snippet.category && <span>{' › '}{snippet.category}</span>}
+      </p>
       {isAdmin && (
         <div className="detail-toolbar">
           <Link to={`/codebase/${id}/edit`} className="btn-secondary">수정</Link>

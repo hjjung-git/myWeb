@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { Routes, Route, Link, useLocation } from 'react-router-dom'
+import { Routes, Route, Link, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider } from './lib/AuthContext.jsx'
 import { ThemeProvider } from './lib/ThemeContext.jsx'
 import { ActiveSectionProvider } from './lib/ActiveSectionContext.jsx'
@@ -26,7 +26,6 @@ import ArchiveLayout from './pages/ArchiveLayout.jsx'
 import ArchiveHome from './pages/ArchiveHome.jsx'
 import ArchiveDetail from './pages/ArchiveDetail.jsx'
 import ArchiveForm from './pages/ArchiveForm.jsx'
-import CodebaseHome from './pages/CodebaseHome.jsx'
 import CodebaseDetail from './pages/CodebaseDetail.jsx'
 import CodebaseForm from './pages/CodebaseForm.jsx'
 import './App.css'
@@ -71,7 +70,10 @@ function App() {
     }
   }, [])
 
-  const areaName = location.pathname.startsWith('/archive') ? 'archive' : location.pathname.startsWith('/codebase') ? 'codebase' : null
+  // Codebase는 Archive 안(오른쪽 사이드바)으로 들어갔으므로 헤더 로고는 둘 다 Archive 홈으로 간다.
+  const areaName = location.pathname.startsWith('/archive') || location.pathname.startsWith('/codebase') ? 'archive' : null
+  // Codebase 작성·수정 화면만 넓은 폭(홈과 같은 1240px)을 쓴다.
+  const wideMain = location.pathname === '/' || /^\/codebase\/(new|\d+\/edit)$/.test(location.pathname)
 
   return (
     <ThemeProvider>
@@ -92,7 +94,7 @@ function App() {
               </div>
             </header>
 
-            <main className={`site-main${location.pathname === '/' || location.pathname.startsWith('/codebase') ? ' site-main--home' : ''}`}>
+            <main className={`site-main${wideMain ? ' site-main--home' : ''}`}>
               <Routes>
                 <Route path="/" element={<Home />} />
                 {/* 영역별 전용 페이지 — 홈은 각 영역의 Overview, 자세한 내용은 여기 */}
@@ -110,17 +112,18 @@ function App() {
                 <Route path="/certifications/new" element={<CertificationForm />} />
                 <Route path="/certifications/:id" element={<CertificationDetail />} />
                 <Route path="/certifications/:id/edit" element={<CertificationForm />} />
-                {/* 첫 화면과 글 보기는 왼쪽 카테고리 트리가 있는 공통 레이아웃 안에서, 작성/수정은 넓은 편집 화면으로 */}
-                <Route path="/archive" element={<ArchiveLayout />}>
-                  <Route index element={<ArchiveHome />} />
-                  <Route path=":id" element={<ArchiveDetail />} />
+                {/* Archive — [Notes 트리 | 가운데 | Codebase 트리] 공통 레이아웃. 홈(통합 검색)·글·코드가 가운데에 열린다.
+                    작성/수정은 넓은 편집 화면으로 레이아웃 밖에 둔다. */}
+                <Route element={<ArchiveLayout />}>
+                  <Route path="/archive" element={<ArchiveHome />} />
+                  <Route path="/archive/:id" element={<ArchiveDetail />} />
+                  <Route path="/codebase/:id" element={<CodebaseDetail />} />
                 </Route>
                 <Route path="/archive/new" element={<ArchiveForm />} />
                 <Route path="/archive/:id/edit" element={<ArchiveForm />} />
-                {/* Codebase — 코드 저장소 */}
-                <Route path="/codebase" element={<CodebaseHome />} />
+                {/* Codebase 따로의 메인 화면은 없다 — 검색·둘러보기는 모두 Archive 홈에서(옛 링크는 홈으로) */}
+                <Route path="/codebase" element={<Navigate to="/archive" replace />} />
                 <Route path="/codebase/new" element={<CodebaseForm />} />
-                <Route path="/codebase/:id" element={<CodebaseDetail />} />
                 <Route path="/codebase/:id/edit" element={<CodebaseForm />} />
               </Routes>
             </main>

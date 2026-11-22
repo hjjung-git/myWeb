@@ -1004,14 +1004,15 @@ button, .btn-primary, .btn-secondary, .btn-danger {
 }
 
 /* ---- archive: 카테고리 트리 레이아웃 (gyoogle.dev 같은 문서형 구조) ---- */
-/* Archive는 [사이드바 | 본문 | 빈 칸] 3칸이다 — 사이드바는 화면 왼쪽(헤더와 같은 여백)에 붙고 스크롤을 따라오지 않으며,
+/* Archive는 [Notes 사이드바 | 본문 | Codebase 사이드바] 3칸이다(예전에는 셋째 칸이 빈 칸) — 사이드바는 화면 왼쪽(헤더와 같은 여백)에 붙고 스크롤을 따라오지 않으며,
    본문은 남는 폭의 가운데에 온다(좁은 화면에서는 사이드바 폭만큼 먼저 비켜 준다).
    .site-main(840px, 가운데 정렬) 안에 있으므로 화면 전체 폭으로 끌어낸다.
    --vw는 스크롤바를 뺀 화면 폭(App.jsx가 갱신)이라, 스크롤바가 보이는 환경에서도 정확히 가운데에 온다. */
 .archive-layout {
   --archive-gutter: clamp(20px, 5vw, 56px);
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(0, 820px) minmax(0, 1fr);
+  /* [Notes 사이드바 | 본문 | Codebase 사이드바] — 오른쪽 사이드바가 서랍으로 접히면(아래 미디어 쿼리) 셋째 칸은 빈 칸 */
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 820px) minmax(240px, 1fr);
   column-gap: clamp(28px, 4vw, 56px);
   align-items: start;
   width: calc(var(--vw, 100vw) - var(--archive-gutter) * 2);
@@ -1383,6 +1384,44 @@ html:not([data-reduce-motion]) .archive-mark .mark-l1 {
 .home-new:hover {
   color: var(--accent-strong);
 }
+
+/* 통합 검색 결과 — Notes / Codebase 두 묶음 */
+.home-results-group + .home-results-group {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--border);
+}
+.home-results-head {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0.45rem 0.8rem 0.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+.home-results-head em {
+  font-style: normal;
+}
+.home-results-all {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.home-results-all:hover {
+  color: var(--accent-strong);
+}
+.home-new-row {
+  display: flex;
+  gap: 1.4rem;
+}
+
 
 .archive-breadcrumb {
   font-family: var(--font-sans);
@@ -3332,4 +3371,225 @@ html:not([data-reduce-motion]) .sb-fill { animation: sb-grow 0.9s cubic-bezier(0
   .portfolio-form .form-row-3 {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---- Archive 양쪽 사이드바: 왼쪽 Notes, 오른쪽 Codebase (2026-11, 탭 대신 한 화면에 공존) ---- */
+/* 사이드바 맨 위 작은 이름표 — 트리보다 눈에 덜 띄게 */
+.sidebar-title {
+  margin: 0 0 -0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+/* 오른쪽 사이드바는 셋째 칸의 오른쪽 끝에 붙는다(화면 양끝이 대칭) */
+.archive-sidebar--right {
+  justify-self: end;
+  padding-right: 0;
+  padding-left: 4px;
+}
+/* Codebase 제목 옆 언어 점 */
+.tree-langs {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+.tree-langs i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  opacity: 0.85;
+}
+/* 용어 메모가 있는 글: 가운데 칸이 넓어지므로, 아주 넓은 화면(≥1700px)에서만 오른쪽 사이드바를 칸에 둔다 */
+@media (min-width: 1700px) {
+  .archive-layout.archive-layout:has(.sn-layout.is-wide) {
+    grid-template-columns: minmax(240px, 1fr) minmax(0, 1072px) minmax(240px, 1fr);
+  }
+}
+@media (max-width: 1280px) {
+  .archive-sidebar--right {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    z-index: 90;
+    width: min(320px, 86vw);
+    max-width: none;
+    padding: 20px 18px 32px;
+    overflow-y: auto;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    border-right: 0;
+    box-shadow: -8px 0 28px rgba(0, 0, 0, 0.14);
+    transform: translateX(102%);
+    visibility: hidden;
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0.28s;
+  }
+  .archive-sidebar--right.is-open {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .archive-scrim--right {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(0, 0, 0, 0.28);
+  }
+  .archive-edge-tab--right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 0;
+    left: auto;
+    top: 50%;
+    z-index: 70;
+    width: 24px;
+    height: 84px;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 1px solid var(--border);
+    border-right: 0;
+    border-radius: 12px 0 0 12px;
+    background: var(--surface);
+    color: var(--accent);
+    cursor: pointer;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.08);
+    transition: width 0.2s ease, background 0.2s ease;
+  }
+  .archive-edge-tab--right:hover,
+  .archive-edge-tab--right:focus-visible {
+    width: 32px;
+    background: var(--accent-soft);
+  }
+  .archive-edge-tab--right.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+@media (max-width: 1699px) {
+  .archive-layout:has(.sn-layout.is-wide) .archive-sidebar--right {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    z-index: 90;
+    width: min(320px, 86vw);
+    max-width: none;
+    padding: 20px 18px 32px;
+    overflow-y: auto;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    border-right: 0;
+    box-shadow: -8px 0 28px rgba(0, 0, 0, 0.14);
+    transform: translateX(102%);
+    visibility: hidden;
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0.28s;
+  }
+  .archive-layout:has(.sn-layout.is-wide) .archive-sidebar--right.is-open {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .archive-layout:has(.sn-layout.is-wide) .archive-scrim--right {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(0, 0, 0, 0.28);
+  }
+  .archive-layout:has(.sn-layout.is-wide) .archive-edge-tab--right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 0;
+    left: auto;
+    top: 50%;
+    z-index: 70;
+    width: 24px;
+    height: 84px;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 1px solid var(--border);
+    border-right: 0;
+    border-radius: 12px 0 0 12px;
+    background: var(--surface);
+    color: var(--accent);
+    cursor: pointer;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.08);
+    transition: width 0.2s ease, background 0.2s ease;
+  }
+  .archive-layout:has(.sn-layout.is-wide) .archive-edge-tab--right:hover,
+  .archive-layout:has(.sn-layout.is-wide) .archive-edge-tab--right:focus-visible {
+    width: 32px;
+    background: var(--accent-soft);
+  }
+  .archive-layout:has(.sn-layout.is-wide) .archive-edge-tab--right.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* ---- Archive 홈: 지식 그래프 관리(관리자만) — 눈에 덜 띄게 작게 ---- */
+.graph-admin {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 2.2rem;
+  padding: 0.8rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  text-align: center;
+}
+.graph-admin p {
+  margin: 0 0 0.45rem;
+}
+.graph-admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.graph-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-faint) 60%, transparent);
+}
+.graph-dot.is-ok {
+  background: var(--accent);
+}
+.graph-admin-error {
+  color: var(--danger, #b4483c);
+  word-break: break-word;
+}
+.graph-admin-btn {
+  margin-top: 0.2rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-dim);
+  font: inherit;
+  cursor: pointer;
+}
+.graph-admin-btn:hover:not(:disabled) {
+  color: var(--accent-strong);
+  border-color: var(--accent);
+}
+.graph-admin-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
 }

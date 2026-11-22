@@ -1,27 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { NavLink, matchPath, useLocation } from 'react-router-dom'
-
-// 펼쳐 둔 분류를 브라우저에 기억한다 (이 기기에서만 쓰는 편의 기능이라 실패해도 그냥 넘어간다).
-const STORAGE_KEY = 'archive-tree-open'
-
-const keyOf = (path) => JSON.stringify(path)
-
-function loadOpenKeys() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-    return new Set(Array.isArray(saved) ? saved : [])
-  } catch {
-    return new Set()
-  }
-}
-
-function saveOpenKeys(keys) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...keys]))
-  } catch {
-    // 저장소를 못 쓰는 환경(사생활 보호 모드 등)에서는 기억만 포기한다.
-  }
-}
+import { keyOf, useOpenKeys } from '../lib/useOpenKeys.js'
+import SideDrawer from './SideDrawer.jsx'
 
 function PostLinks({ posts }) {
   if (posts.length === 0) return null
@@ -62,33 +42,10 @@ function TreeNode({ node, depth, openKeys, onToggle }) {
   )
 }
 
-// Archive 왼쪽 사이드바 — 대분류 > 중분류 > 소분류 > 글 제목 트리.
-// 창이 좁으면(≤1080px) 화면 왼쪽 밖으로 접혀 있고, 왼쪽 가장자리 탭에 마우스를 올리거나 누르면(터치 포함) 펼쳐진다.
-//  · 올려서 연 것은 마우스가 벗어나면 닫히고, 눌러서 연 것(펼친 목록 안을 누른 것 포함)은 바깥을 누르거나 Esc·글 이동 때 닫힌다.
+// Archive 왼쪽 사이드바(Notes) — 대분류 > 중분류 > 소분류 > 글 제목 트리. 접힘·서랍 동작은 SideDrawer.
 function ArchiveSidebar({ tree, loading, error }) {
   const location = useLocation()
-  const [open, setOpen] = useState(false)
-  const [pinned, setPinned] = useState(false) // 눌러서 연 상태 — 마우스가 벗어나도 유지
-  const [openKeys, setOpenKeys] = useState(loadOpenKeys)
-
-  const close = useCallback(() => {
-    setOpen(false)
-    setPinned(false)
-  }, [])
-
-  // 다른 글로 이동하면 접는다.
-  useEffect(() => {
-    close()
-  }, [location.pathname, close])
-
-  useEffect(() => {
-    if (!open) return undefined
-    const onKey = (e) => e.key === 'Escape' && close()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, close])
-
-  const hoverCapable = () => typeof window.matchMedia === 'function' && window.matchMedia('(hover: hover)').matches
+  const [openKeys, toggle, reveal] = useOpenKeys('archive-tree-open')
 
   // 글 상세 화면이면 그 글이 속한 분류 경로를 찾아 둔다.
   const postPaths = useMemo(() => {
@@ -109,58 +66,20 @@ function ArchiveSidebar({ tree, loading, error }) {
   // (직접 접은 다른 분류는 건드리지 않는다.)
   useEffect(() => {
     const path = JSON.parse(revealKey)
-    if (path.length === 0) return
-    setOpenKeys((prev) => {
-      const next = new Set(prev)
-      for (let i = 1; i <= path.length; i++) next.add(keyOf(path.slice(0, i)))
-      return next.size === prev.size ? prev : next
-    })
-  }, [revealKey])
-
-  useEffect(() => {
-    saveOpenKeys(openKeys)
-  }, [openKeys])
-
-  const toggle = useCallback((key) => {
-    setOpenKeys((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }, [])
+    reveal(path.map((_, i) => keyOf(path.slice(0, i + 1))))
+  }, [revealKey, reveal])
 
   return (
-    <>
-      <button
-        type="button"
-        className={`archive-edge-tab${open ? ' is-hidden' : ''}`}
-        aria-label="카테고리 열기"
-        aria-expanded={open}
-        aria-controls="archive-drawer"
-        onMouseEnter={() => hoverCapable() && setOpen(true)}
-        onClick={() => {
-          setOpen(true)
-          setPinned(true)
-        }}
-      >
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-      {open && <div className="archive-scrim" onClick={close} aria-hidden="true" />}
+    <SideDrawer side="left" id="archive-drawer" title="Notes" openLabel="Notes 카테고리 열기">
+      <nav className="archive-tree" aria-label="Notes 카테고리">
+        {error && <p className="status status-error">분류를 불러오지 못했습니다.</p>}
+        {!error && loading && <p className="status">불러오는 중...</p>}
 
-      <aside id="archive-drawer" className={`archive-sidebar${open ? ' is-open' : ''}`} onMouseLeave={() => !pinned && setOpen(false)} onClick={() => setPinned(true)}>
-        <nav className="archive-tree" aria-label="Archive 카테고리">
-          {error && <p className="status status-error">분류를 불러오지 못했습니다.</p>}
-          {!error && loading && <p className="status">불러오는 중...</p>}
-
-          {tree.map((node) => (
-            <TreeNode key={node.name} node={node} depth={0} openKeys={openKeys} onToggle={toggle} />
-          ))}
-        </nav>
-      </aside>
-    </>
+        {tree.map((node) => (
+          <TreeNode key={node.name} node={node} depth={0} openKeys={openKeys} onToggle={toggle} />
+        ))}
+      </nav>
+    </SideDrawer>
   )
 }
 
