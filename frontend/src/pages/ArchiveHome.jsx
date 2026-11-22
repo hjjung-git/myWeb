@@ -6,7 +6,7 @@ import { languagesOf } from '../lib/codebase.js'
 import { languageInQuery, searchAll } from '../lib/search.js'
 import ArchiveMark from '../components/ArchiveMark.jsx'
 import GraphAdminPanel from '../components/GraphAdminPanel.jsx'
-import ChatThread from '../components/ChatThread.jsx'
+import ChatThread, { ChatHistory } from '../components/ChatThread.jsx'
 import { useArchiveChat } from '../lib/useArchiveChat.js'
 
 const MAX_PER_GROUP = 5
@@ -26,6 +26,8 @@ function ArchiveHome() {
   const chat = useArchiveChat()
   const [mode, setMode] = useState('search')
   const asking = mode === 'ask'
+  // 대화가 있으면 대표 그림을 숨기고 [대화 칸 → 입력창] 순서로 — 대화가 화면을 쭉 쓴다
+  const inConversation = asking && chat.turns.length > 0
   const found = useMemo(() => (asking ? null : searchAll(query, posts, snippets)), [asking, query, posts, snippets])
 
   // 화면에 보이는 결과(묶음마다 최대 5개)를 한 줄로 펼쳐 ↑↓·Enter가 두 묶음을 이어서 움직이게 한다.
@@ -107,8 +109,8 @@ function ArchiveHome() {
 
   let index = -1
   return (
-    <section className="archive-home">
-      <ArchiveMark />
+    <section className={`archive-home${inConversation ? ' is-chat' : ''}`}>
+      {!inConversation && <ArchiveMark />}
 
       {chat.status?.available && (
         <div className="home-mode" role="tablist" aria-label="검색 방식">
@@ -131,6 +133,17 @@ function ArchiveHome() {
             </button>
           ))}
         </div>
+      )}
+
+      {inConversation && (
+        <ChatThread
+          turns={chat.turns}
+          asking={chat.asking}
+          past={chat.past}
+          onReset={chat.reset}
+          onOpen={chat.open}
+          onRemove={chat.remove}
+        />
       )}
 
       <div className="home-searchbox">
@@ -206,9 +219,14 @@ function ArchiveHome() {
         </div>
       )}
 
-      {asking && <ChatThread turns={chat.turns} asking={chat.asking} onReset={chat.reset} />}
+      {asking && !inConversation && chat.past.length > 0 && (
+        <div className="chat-past-only">
+          <p className="home-results-head"><span>지난 대화</span><em>{chat.past.length}</em></p>
+          <ChatHistory past={chat.past} onOpen={chat.open} onRemove={chat.remove} />
+        </div>
+      )}
 
-      {isAdmin && !groups && !(asking && chat.turns.length > 0) && (
+      {isAdmin && !groups && !asking && (
         <>
           <div className="home-new-row">
             <Link to="/archive/new" className="home-new">+ 새 글 작성</Link>

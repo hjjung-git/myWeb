@@ -3622,9 +3622,106 @@ html:not([data-reduce-motion]) .sb-fill { animation: sb-grow 0.9s cubic-bezier(0
   color: var(--accent-strong);
   font-weight: 600;
 }
-.chat-thread {
+/* 대화 중: 대표 그림을 숨기고 위쪽 여백을 줄여 대화 칸이 화면을 쓴다 */
+.archive-home.is-chat {
+  padding: 1.2rem 0 0.8rem;
+}
+.chat-panel {
   width: 100%;
-  margin-top: 1.2rem;
+  margin-bottom: 0.9rem;
+  text-align: left;
+}
+.chat-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+.chat-bar-btn {
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+.chat-bar-btn:hover:not(:disabled),
+.chat-bar-btn.is-on {
+  color: var(--accent-strong);
+  border-color: var(--accent);
+}
+.chat-bar-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+/* 대화만 따로 스크롤 — 헤더·모드 전환·입력창을 뺀 높이 */
+.chat-scroll {
+  max-height: calc(100vh - var(--header-h, 64px) - 240px);
+  min-height: 180px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.2rem 0.4rem 0.2rem 0;
+}
+.chat-history {
+  list-style: none;
+  margin: 0 0 0.7rem;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  max-height: 240px;
+  overflow-y: auto;
+}
+.chat-history li {
+  display: flex;
+  align-items: center;
+}
+.chat-history-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.chat-history-open:hover {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.chat-history-open strong {
+  overflow: hidden;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-history-open span {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+.chat-history-del {
+  padding: 0.2rem 0.5rem;
+  border: 0;
+  background: none;
+  color: var(--text-faint);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.chat-history-del:hover {
+  color: var(--danger);
+}
+.chat-past-only {
+  width: 100%;
+  margin-top: 1rem;
   text-align: left;
 }
 .chat-turn + .chat-turn {
@@ -3681,20 +3778,4 @@ html:not([data-reduce-motion]) .sb-fill { animation: sb-grow 0.9s cubic-bezier(0
   font-family: var(--font-sans);
   font-size: 0.72rem;
   color: var(--text-faint);
-}
-.chat-reset {
-  display: block;
-  margin: 1.2rem auto 0;
-  padding: 0.3rem 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: none;
-  color: var(--text-dim);
-  font-family: var(--font-sans);
-  font-size: 0.78rem;
-  cursor: pointer;
-}
-.chat-reset:hover {
-  color: var(--accent-strong);
-  border-color: var(--accent);
 }
