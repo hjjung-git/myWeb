@@ -109,8 +109,8 @@ function CodebaseForm() {
       </label>
 
       <label>
-        용도 (선택 — 언어 안에서 묶는 소제목)
-        <input value={category} onChange={(e) => setCategory(e.target.value)} maxLength={30} list="codebase-category-options" placeholder="예: 재사용 알고리즘" />
+        주제 (선택 — 목록에서 묶는 분류)
+        <input value={category} onChange={(e) => setCategory(e.target.value)} maxLength={30} list="codebase-category-options" placeholder="예: 그래프·탐색" />
         <datalist id="codebase-category-options">
           {categoryOptions.map((name) => <option key={name} value={name} />)}
         </datalist>

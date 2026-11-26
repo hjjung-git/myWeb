@@ -5,8 +5,9 @@ export const COMMON_LANGUAGES = [
   'Java', 'Python', 'JavaScript', 'TypeScript', 'SQL', 'Cypher', 'Shell', 'C', 'C++', 'HTML', 'CSS', 'Kotlin', 'Go',
 ]
 
-// 글을 묶는 '용도' — 목록 소제목 순서이기도 하다. 목록에 없는 용도도 직접 적을 수 있고 뒤에 붙는다.
-export const CODE_CATEGORIES = ['재사용 알고리즘', '효율적인 코드', '짧은 표현']
+// 글을 묶는 '주제' — 목록·사이드바 소제목 순서이기도 하다(2026-11 '재사용 알고리즘/효율적인 코드/짧은 표현'에서 바꿈).
+// 목록에 없는 주제도 직접 적을 수 있고 뒤에(가나다순) 붙는다. DB 칸 이름은 그대로 category.
+export const CODE_CATEGORIES = ['그래프·탐색', '배열·구간', '해시·컬렉션', '성능·메모리', '비동기·이벤트', '언어 문법', 'SQL 쿼리']
 export const NO_CATEGORY = '기타'
 
 // 한 글이 가진 언어들 (한 글에 여러 언어의 코드가 들어갈 수 있다)
@@ -19,7 +20,7 @@ export function languageCounts(snippets) {
   return [...count.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
 }
 
-// 용도별로 묶기: [{ category, items }] — CODE_CATEGORIES 순서 → 나머지(가나다) → 기타. 글은 한 번만 나온다.
+// 주제별로 묶기: [{ category, items }] — CODE_CATEGORIES 순서 → 나머지(가나다) → 기타. 글은 한 번만 나온다.
 export function groupByCategory(snippets) {
   const byCat = new Map()
   for (const s of snippets) {

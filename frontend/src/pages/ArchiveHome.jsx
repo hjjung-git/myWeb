@@ -13,7 +13,7 @@ import { useArchiveChat } from '../lib/useArchiveChat.js'
 const MAX_PER_GROUP = 5
 
 // Archive 첫 화면(/archive) — 대표 그림과 통합 검색창. 검색·둘러보기는 모두 여기서 한다(Notes·Codebase 따로의 메인 화면은 없다).
-// 검색은 Notes 글(제목·분류·관련 기술)과 Codebase 코드(제목·설명·용도·언어·관련 기술)를 한 번에 찾아
+// 검색은 Notes 글(제목·분류·관련 기술)과 Codebase 코드(제목·설명·주제·언어·관련 기술)를 한 번에 찾아
 // 'Notes'·'Codebase' 두 묶음으로 보여 준다. 글 목록은 왼쪽(Notes)·오른쪽(Codebase) 사이드바에 있다.
 function ArchiveHome() {
   const { isAdmin } = useAuth()

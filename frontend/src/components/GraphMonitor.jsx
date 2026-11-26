@@ -13,7 +13,7 @@ export const LABELS = {
   Skill: { name: '기술', color: '#c27c1a' },
   Project: { name: '프로젝트', color: '#9b4dca' },
   Category: { name: '분류', color: '#7a8a83' },
-  Purpose: { name: '용도', color: '#b0476b' },
+  Purpose: { name: '주제', color: '#b0476b' },
 }
 const docUrl = (node) =>
   node.label === 'Note' ? `/archive/${node.ref}` : node.label === 'Code' ? `/codebase/${node.ref}` : null
