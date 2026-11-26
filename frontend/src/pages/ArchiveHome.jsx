@@ -7,6 +7,7 @@ import { languageInQuery, searchAll } from '../lib/search.js'
 import ArchiveMark from '../components/ArchiveMark.jsx'
 import GraphAdminPanel from '../components/GraphAdminPanel.jsx'
 import ChatThread, { ChatHistory } from '../components/ChatThread.jsx'
+import GraphMonitor from '../components/GraphMonitor.jsx'
 import { useArchiveChat } from '../lib/useArchiveChat.js'
 
 const MAX_PER_GROUP = 5
@@ -25,6 +26,7 @@ function ArchiveHome() {
   // AI 질문(Hybrid RAG) — 서버가 '쓸 수 있음'이라고 할 때만 '검색 | AI 질문' 전환이 보인다
   const chat = useArchiveChat()
   const [mode, setMode] = useState('search')
+  const [graphOpen, setGraphOpen] = useState(false) // 누구나 여는 읽기 전용 그래프 보기
   const asking = mode === 'ask'
   // 대화가 있으면 대표 그림을 숨기고 [대화 칸 → 입력창] 순서로 — 대화가 화면을 쭉 쓴다
   const inConversation = asking && chat.turns.length > 0
@@ -225,6 +227,19 @@ function ArchiveHome() {
           <ChatHistory past={chat.past} onOpen={chat.open} onRemove={chat.remove} />
         </div>
       )}
+
+      {!groups && !asking && (
+        <button type="button" className="home-graph-link" onClick={() => setGraphOpen(true)}>
+          <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true">
+            <circle cx="4" cy="14" r="2.2" />
+            <circle cx="10" cy="5" r="2.2" />
+            <circle cx="16" cy="13" r="2.2" />
+            <path d="M5.6 12.6 8.5 6.6M11.6 6.3l3 5.1M6.2 14.2h7.6" />
+          </svg>
+          지식 그래프 보기
+        </button>
+      )}
+      {graphOpen && <GraphMonitor admin={isAdmin} onClose={() => setGraphOpen(false)} />}
 
       {isAdmin && !groups && !asking && (
         <>

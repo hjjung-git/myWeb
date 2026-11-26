@@ -61,6 +61,8 @@ public class RagService
 
     public record Source(int n, String type, long id, String title, String url, String category, List<String> skills) {}
     public record Answer(String answer, List<Source> sources, int inputTokens, int outputTokens, String model) {}
+    /** 검색 단계만(답변 없이) — 관리자 '검색 시험' 화면용. Claude 호출이 없어 답변 요금이 들지 않는다. */
+    public record Retrieval(List<Map<String, Object>> vector, List<Map<String, Object>> keyword, List<Map<String, Object>> fused) {}
 
     private final Neo4jHttpClient neo4j;
     private final VoyageClient voyage;
@@ -75,7 +77,7 @@ public class RagService
         this.settings = settings;
     }
 
-    public Answer ask(String question, List<ClaudeClient.Message> history)
+    public Retrieval retrieve(String question)
     {
         // ①② 검색 — 임베딩이 꺼져 있으면 키워드만
         List<Map<String, Object>> vectorHits = settings.embeddingEnabled()
@@ -85,9 +87,13 @@ public class RagService
         List<Map<String, Object>> keywordHits = lucene.isEmpty()
                 ? List.of()
                 : neo4j.run(KEYWORD_SEARCH, Map.of("k", K, "q", lucene));
-
         // ③ 합치기
-        List<Map<String, Object>> picked = fuse(vectorHits, keywordHits);
+        return new Retrieval(vectorHits, keywordHits, fuse(vectorHits, keywordHits));
+    }
+
+    public Answer ask(String question, List<ClaudeClient.Message> history)
+    {
+        List<Map<String, Object>> picked = retrieve(question).fused();
 
         // ④ 그래프 확장 — 글·코드 단위로 묶어 번호를 매긴다
         Map<String, Integer> numberOf = new LinkedHashMap<>();
